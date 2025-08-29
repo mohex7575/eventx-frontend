@@ -10,17 +10,17 @@ const BookingPage = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    fetchEvent();
-  }, [id]);
+    const fetchEvent = async () => {
+      try {
+        const response = await eventAPI.getEvent(id);
+        setEvent(response.data);
+      } catch (error) {
+        console.error('Error fetching event:', error);
+      }
+    };
 
-  const fetchEvent = async () => {
-    try {
-      const response = await eventAPI.getEvent(id);
-      setEvent(response.data);
-    } catch (error) {
-      console.error('Error fetching event:', error);
-    }
-  };
+    fetchEvent();
+  }, [id]); // أضف id ك dependency
 
   const handleBooking = async () => {
     if (!selectedSeat) {
@@ -39,7 +39,7 @@ const BookingPage = () => {
       navigate('/my-tickets');
     } catch (error) {
       console.error('Booking error:', error);
-      alert('Booking failed: ' + error.response?.data?.message);
+      alert('Booking failed: ' + (error.response?.data?.message || error.message));
     } finally {
       setLoading(false);
     }
@@ -62,7 +62,7 @@ const BookingPage = () => {
                 <p><strong>Date:</strong> {new Date(event.date).toLocaleDateString()}</p>
                 <p><strong>Time:</strong> {event.time}</p>
                 <p><strong>Location:</strong> {event.location}</p>
-                <p><strong>Selected Seat:</strong> {selectedSeat}</p>
+                <p><strong>Selected Seat:</strong> {selectedSeat || 'Not selected'}</p>
                 <p><strong>Price:</strong> ${event.price}</p>
               </div>
             </div>

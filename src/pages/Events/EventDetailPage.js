@@ -12,7 +12,7 @@ const EventDetailPage = () => {
 
   useEffect(() => {
     fetchEvent();
-  }, [id]);
+  }, [id]); // ← أضف id ك dependency هنا
 
   const fetchEvent = async () => {
     try {

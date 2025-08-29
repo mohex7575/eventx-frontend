@@ -157,9 +157,13 @@ const Login = () => {
               <input type="checkbox" className="w-4 h-4 text-blue-600 rounded" />
               <span className="ml-2 text-sm text-gray-600">Remember me</span>
             </label>
-            <a href="#" className="text-sm text-blue-600 hover:text-blue-800">
+            <button 
+              type="button"
+              className="text-sm text-blue-600 hover:text-blue-800"
+              onClick={() => alert('Password reset feature coming soon!')}
+            >
               Forgot password?
-            </a>
+            </button>
           </div>
 
           <button 
@@ -193,9 +197,13 @@ const Login = () => {
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-600">
             Don't have an account?{' '}
-            <a href="#" className="text-blue-600 hover:text-blue-800 font-medium">
+            <button 
+              type="button"
+              className="text-blue-600 hover:text-blue-800 font-medium"
+              onClick={() => alert('Please email support@eventx.com for account access')}
+            >
               Contact administrator
-            </a>
+            </button>
           </p>
         </div>
       </div>
