@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import AdminDashboard from './pages/Admin/AdminDashboard';
 import EventsPage from './pages/Events/EventsPage';
@@ -9,15 +9,77 @@ import Login from './components/Login';
 import './App.css';
 
 function App() {
-  const isAuthenticated = !!localStorage.getItem('token');
-  const userRole = localStorage.getItem('userRole');
+  const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('token'));
+  const [userRole, setUserRole] = useState(localStorage.getItem('userRole'));
+  const [userName, setUserName] = useState(localStorage.getItem('userName'));
+
+  // تتبع تغييرات authentication
+  useEffect(() => {
+    const checkAuth = () => {
+      setIsAuthenticated(!!localStorage.getItem('token'));
+      setUserRole(localStorage.getItem('userRole'));
+      setUserName(localStorage.getItem('userName'));
+    };
+
+    // تحقق كلما حدث تغيير في localStorage
+    const handleStorageChange = () => {
+      checkAuth();
+    };
+
+    // استمع لتغييرات localStorage
+    window.addEventListener('storage', handleStorageChange);
+    
+    // تحقق أيضاً عند تحميل المكون
+    checkAuth();
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
+  // function لتحديث state عند Login/Logout
+  const updateAuthStatus = () => {
+    setIsAuthenticated(!!localStorage.getItem('token'));
+    setUserRole(localStorage.getItem('userRole'));
+    setUserName(localStorage.getItem('userName'));
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('userName');
+    updateAuthStatus();
+    window.location.href = '/login';
+  };
 
   return (
     <Router>
       <div className="App">
+        {/* شريط التنقل مع زر Logout */}
+        {isAuthenticated && (
+          <header className="bg-white shadow-md p-4">
+            <div className="container mx-auto flex justify-between items-center">
+              <h1 className="text-xl font-bold text-blue-600">EventX Studio</h1>
+              
+              <div className="flex items-center space-x-4">
+                <span className="text-gray-700">Welcome, {userName || 'User'}</span>
+                <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm capitalize">
+                  {userRole}
+                </span>
+                <button
+                  onClick={handleLogout}
+                  className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-200"
+                >
+                  Logout
+                </button>
+              </div>
+            </div>
+          </header>
+        )}
+
         <Routes>
           {/* Public Routes */}
-          <Route path="/login" element={<Login />} />
+          <Route path="/login" element={<Login onLogin={updateAuthStatus} />} />
           <Route path="/events" element={<EventsPage />} />
           <Route path="/event/:id" element={<EventDetailPage />} />
           
