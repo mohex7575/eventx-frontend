@@ -11,22 +11,22 @@ const EventDetailPage = () => {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    fetchEvent();
-  }, [id]); // ← أضف id ك dependency هنا
+    const loadEvent = async () => {
+      try {
+        setLoading(true);
+        setError('');
+        const response = await eventAPI.getEvent(id);
+        setEvent(response.data);
+      } catch (error) {
+        console.error('Error fetching event:', error);
+        setError('Failed to load event details. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const fetchEvent = async () => {
-    try {
-      setLoading(true);
-      setError('');
-      const response = await eventAPI.getEvent(id);
-      setEvent(response.data);
-    } catch (error) {
-      console.error('Error fetching event:', error);
-      setError('Failed to load event details. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
+    loadEvent();
+  }, [id]); // فقط id dependency
 
   const handleSeatSelect = (seatNumber) => {
     setSelectedSeat(seatNumber);
@@ -61,7 +61,7 @@ const EventDetailPage = () => {
             <h2 className="text-xl font-bold text-gray-800 mb-2">Oops! Something went wrong</h2>
             <p className="text-gray-600 mb-4">{error}</p>
             <button
-              onClick={fetchEvent}
+              onClick={() => window.location.reload()}
               className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600 mr-2"
             >
               Try Again

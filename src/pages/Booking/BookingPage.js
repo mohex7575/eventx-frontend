@@ -30,7 +30,8 @@ const BookingPage = () => {
 
     setLoading(true);
     try {
-      const response = await ticketAPI.book({
+      // ✅ الإصلاح: إزالة response غير المستخدم
+      await ticketAPI.book({
         eventId: id,
         seatNumber: selectedSeat
       });
