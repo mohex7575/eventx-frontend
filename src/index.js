@@ -7,8 +7,8 @@ import App from './App';
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <Router> {/* غلف App بـ Router هنا */}
+    
       <App />
-    </Router>
+   
   </React.StrictMode>
 );
