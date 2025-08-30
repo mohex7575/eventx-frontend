@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 
-const Login = () => {
-  const [isLogin, setIsLogin] = useState(true); // true for login, false for register
+const Login = ({ onLogin }) => {
+  const [isLogin, setIsLogin] = useState(true);
   const [loginData, setLoginData] = useState({
     email: '',
     password: ''
@@ -18,7 +18,6 @@ const Login = () => {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  // Login functions
   const handleLoginChange = (e) => {
     setLoginData({
       ...loginData,
@@ -39,6 +38,8 @@ const Login = () => {
       localStorage.setItem('userRole', role);
       localStorage.setItem('userName', name);
       
+      if (onLogin) onLogin();
+      
       if (role === 'admin') {
         navigate('/admin');
       } else {
@@ -51,7 +52,6 @@ const Login = () => {
     }
   };
 
-  // Register functions
   const handleRegisterChange = (e) => {
     setRegisterData({
       ...registerData,
@@ -81,6 +81,7 @@ const Login = () => {
       localStorage.setItem('userRole', response.data.role);
       localStorage.setItem('userName', response.data.name);
       
+      if (onLogin) onLogin();
       navigate('/events');
     } catch (error) {
       setError(error.response?.data?.message || 'Registration failed');
@@ -90,37 +91,38 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white p-8 rounded-lg shadow-md w-96">
-        <h2 className="text-2xl font-bold mb-6 text-center">
-          {isLogin ? 'Login' : 'Create Account'}
+    <div className="login-container">
+      <div className="login-card">
+        <h2 className="login-title">
+          {isLogin ? 'Welcome back! 👋' : 'Create your new account 🎉'}
         </h2>
         
-        {error && <div className="bg-red-100 text-red-700 p-3 rounded mb-4">{error}</div>}
+        {error && <div className="error-message">{error}</div>}
         
         {isLogin ? (
-          // Login Form
-          <form onSubmit={handleLoginSubmit}>
-            <div className="mb-4">
-              <label className="block text-gray-700 mb-2">Email</label>
+          <form onSubmit={handleLoginSubmit} className="login-form">
+            <div className="form-group">
+              <label className="form-label">Email</label>
               <input
                 type="email"
                 name="email"
                 value={loginData.email}
                 onChange={handleLoginChange}
-                className="w-full px-3 py-2 border rounded-md"
+                className="form-input"
+                placeholder="Enter your email"
                 required
               />
             </div>
             
-            <div className="mb-6">
-              <label className="block text-gray-700 mb-2">Password</label>
+            <div className="form-group">
+              <label className="form-label">Password</label>
               <input
                 type="password"
                 name="password"
                 value={loginData.password}
                 onChange={handleLoginChange}
-                className="w-full px-3 py-2 border rounded-md"
+                className="form-input"
+                placeholder="Enter your password"
                 required
               />
             </div>
@@ -128,58 +130,61 @@ const Login = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600 disabled:opacity-50"
+              className="login-btn"
             >
               {loading ? 'Logging in...' : 'Login'}
             </button>
           </form>
         ) : (
-          // Register Form
-          <form onSubmit={handleRegisterSubmit}>
-            <div className="mb-4">
-              <label className="block text-gray-700 mb-2">Full Name</label>
+          <form onSubmit={handleRegisterSubmit} className="login-form">
+            <div className="form-group">
+              <label className="form-label">Full Name</label>
               <input
                 type="text"
                 name="name"
                 value={registerData.name}
                 onChange={handleRegisterChange}
-                className="w-full px-3 py-2 border rounded-md"
+                className="form-input"
+                placeholder="Enter your full name"
                 required
               />
             </div>
             
-            <div className="mb-4">
-              <label className="block text-gray-700 mb-2">Email</label>
+            <div className="form-group">
+              <label className="form-label">Email</label>
               <input
                 type="email"
                 name="email"
                 value={registerData.email}
                 onChange={handleRegisterChange}
-                className="w-full px-3 py-2 border rounded-md"
+                className="form-input"
+                placeholder="Enter your email"
                 required
               />
             </div>
             
-            <div className="mb-4">
-              <label className="block text-gray-700 mb-2">Password</label>
+            <div className="form-group">
+              <label className="form-label">Password</label>
               <input
                 type="password"
                 name="password"
                 value={registerData.password}
                 onChange={handleRegisterChange}
-                className="w-full px-3 py-2 border rounded-md"
+                className="form-input"
+                placeholder="Create a strong password"
                 required
               />
             </div>
             
-            <div className="mb-6">
-              <label className="block text-gray-700 mb-2">Confirm Password</label>
+            <div className="form-group">
+              <label className="form-label">Confirm Password</label>
               <input
                 type="password"
                 name="confirmPassword"
                 value={registerData.confirmPassword}
                 onChange={handleRegisterChange}
-                className="w-full px-3 py-2 border rounded-md"
+                className="form-input"
+                placeholder="Re-enter your password"
                 required
               />
             </div>
@@ -187,21 +192,24 @@ const Login = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-green-500 text-white py-2 rounded-md hover:bg-green-600 disabled:opacity-50"
+              className="register-btn"
             >
-              {loading ? 'Creating Account...' : 'Create Account'}
+              {loading ? 'Creating account...' : 'Create Account'}
             </button>
           </form>
         )}
         
-        <p className="mt-4 text-center text-gray-600">
+        <p className="login-switch">
           {isLogin ? "Don't have an account? " : "Already have an account? "}
           <button
             type="button"
-            onClick={() => setIsLogin(!isLogin)}
-            className="text-blue-500 hover:underline"
+            onClick={() => {
+              setIsLogin(!isLogin);
+              setError('');
+            }}
+            className="switch-btn"
           >
-            {isLogin ? 'Register here' : 'Login here'}
+            {isLogin ? 'Register now' : 'Login to your account'}
           </button>
         </p>
       </div>
