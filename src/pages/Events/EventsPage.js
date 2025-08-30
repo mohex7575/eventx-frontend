@@ -1,5 +1,4 @@
-// src/pages/Events/EventsPage.js
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import './EventsPage.css';
@@ -17,10 +16,6 @@ const EventsPage = () => {
     fetchEvents();
   }, []);
 
-  useEffect(() => {
-    filterEvents();
-  }, [events, searchTerm, categoryFilter]);
-
   const fetchEvents = async () => {
     try {
       const response = await api.get('/events');
@@ -33,7 +28,7 @@ const EventsPage = () => {
     }
   };
 
-  const filterEvents = () => {
+  const filterEvents = useCallback(() => {
     let filtered = events;
 
     // Filter by search term
@@ -51,7 +46,11 @@ const EventsPage = () => {
     }
 
     setFilteredEvents(filtered);
-  };
+  }, [events, searchTerm, categoryFilter]);
+
+  useEffect(() => {
+    filterEvents();
+  }, [filterEvents]);
 
   const handleEventClick = (eventId) => {
     navigate(`/event/${eventId}`);
