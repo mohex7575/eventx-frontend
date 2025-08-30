@@ -1,34 +1,51 @@
+// src/pages/Events/EventsPage.js
 import React, { useState, useEffect } from 'react';
-import { eventAPI } from '../../services/api';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import api from '../../services/api';
+import './EventsPage.css';
 
 const EventsPage = () => {
   const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [filteredEvents, setFilteredEvents] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchEvents();
   }, []);
 
+  useEffect(() => {
+    filterEvents();
+  }, [events, searchTerm, categoryFilter]);
+
   const fetchEvents = async () => {
     try {
-      const response = await eventAPI.getEvents();
+      const response = await api.get('/events');
       setEvents(response.data);
-      setFilteredEvents(response.data);
     } catch (error) {
+      setError('Failed to load events');
       console.error('Error fetching events:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleSearch = () => {
-    let filtered = events.filter(event =>
-      event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      event.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      event.location.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+  const filterEvents = () => {
+    let filtered = events;
 
+    // Filter by search term
+    if (searchTerm) {
+      filtered = filtered.filter(event =>
+        event.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        event.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        event.location.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Filter by category
     if (categoryFilter !== 'all') {
       filtered = filtered.filter(event => event.category === categoryFilter);
     }
@@ -36,73 +53,143 @@ const EventsPage = () => {
     setFilteredEvents(filtered);
   };
 
+  const handleEventClick = (eventId) => {
+    navigate(`/event/${eventId}`);
+  };
+
+  const handleBookNow = (eventId, e) => {
+    e.stopPropagation();
+    navigate(`/booking/${eventId}`);
+  };
+
+  if (loading) {
+    return (
+      <div className="events-loading">
+        <div className="loading-spinner"></div>
+        <p>Loading events...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="events-error">
+        <p>{error}</p>
+        <button onClick={fetchEvents} className="retry-btn">
+          Try Again
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
-      <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">Browse Events</h1>
-        
-        {/* Search and Filter */}
-        <div className="bg-white p-6 rounded-lg shadow mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <input
-              type="text"
-              placeholder="Search events..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="px-4 py-2 border rounded-md"
-            />
-            <select
-              value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
-              className="px-4 py-2 border rounded-md"
-            >
-              <option value="all">All Categories</option>
-              <option value="Conference">Conference</option>
-              <option value="Workshop">Workshop</option>
-              <option value="Concert">Concert</option>
-              <option value="Webinar">Webinar</option>
-              <option value="Sports">Sports</option>
-              <option value="Other">Other</option>
-            </select>
-            <button
-              onClick={handleSearch}
-              className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600"
-            >
-              Search
-            </button>
-          </div>
+    <div className="events-page">
+      <div className="events-header">
+        <h1>Upcoming Events</h1>
+        <p>Discover amazing events happening around you</p>
+      </div>
+
+      {/* Search and Filter Section */}
+      <div className="events-filters">
+        <div className="search-box">
+          <input
+            type="text"
+            placeholder="Search events..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="search-input"
+          />
+          <span className="search-icon">🔍</span>
         </div>
 
-        {/* Events Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredEvents.map((event) => (
-            <div key={event._id} className="bg-white rounded-lg shadow overflow-hidden">
-              <div className="p-6">
-                <h3 className="text-xl font-bold mb-2">{event.title}</h3>
-                <p className="text-gray-600 mb-2">{new Date(event.date).toLocaleDateString()} at {event.time}</p>
-                <p className="text-gray-600 mb-2">{event.location}</p>
-                <p className="text-gray-600 mb-4">{event.category}</p>
-                <div className="flex justify-between items-center">
-                  <span className="text-2xl font-bold">${event.price}</span>
-                  <span className="text-sm text-gray-500">
-                    {event.availableSeats} seats left
-                  </span>
+        <select
+          value={categoryFilter}
+          onChange={(e) => setCategoryFilter(e.target.value)}
+          className="category-filter"
+        >
+          <option value="all">All Categories</option>
+          <option value="conference">Conference</option>
+          <option value="workshop">Workshop</option>
+          <option value="concert">Concert</option>
+          <option value="sports">Sports</option>
+          <option value="networking">Networking</option>
+        </select>
+      </div>
+
+      {/* Events Grid */}
+      <div className="events-grid">
+        {filteredEvents.length === 0 ? (
+          <div className="no-events">
+            <p>No events found matching your criteria</p>
+          </div>
+        ) : (
+          filteredEvents.map((event) => (
+            <div
+              key={event._id}
+              className="event-card"
+              onClick={() => handleEventClick(event._id)}
+            >
+              <div className="event-image">
+                {event.image ? (
+                  <img src={event.image} alt={event.name} />
+                ) : (
+                  <div className="event-image-placeholder">
+                    {event.name.charAt(0)}
+                  </div>
+                )}
+                <div className="event-category">{event.category}</div>
+              </div>
+
+              <div className="event-content">
+                <h3 className="event-name">{event.name}</h3>
+                <p className="event-description">{event.description}</p>
+                
+                <div className="event-details">
+                  <div className="event-detail">
+                    <span className="detail-icon">📅</span>
+                    <span>{new Date(event.date).toLocaleDateString()}</span>
+                  </div>
+                  <div className="event-detail">
+                    <span className="detail-icon">⏰</span>
+                    <span>{new Date(event.date).toLocaleTimeString()}</span>
+                  </div>
+                  <div className="event-detail">
+                    <span className="detail-icon">📍</span>
+                    <span>{event.location}</span>
+                  </div>
                 </div>
-                <Link
-                  to={`/event/${event._id}`}
-                  className="block mt-4 bg-blue-500 text-white text-center py-2 rounded-md hover:bg-blue-600"
-                >
-                  View Details
-                </Link>
+
+                <div className="event-footer">
+                  <div className="event-capacity">
+                    <span className="capacity-text">
+                      {event.registeredUsers?.length || 0}/{event.capacity} seats booked
+                    </span>
+                    <div className="capacity-bar">
+                      <div 
+                        className="capacity-progress"
+                        style={{
+                          width: `${((event.registeredUsers?.length || 0) / event.capacity) * 100}%`
+                        }}
+                      ></div>
+                    </div>
+                  </div>
+
+                  <div className="event-actions">
+                    <span className="event-price">
+                      {event.price > 0 ? `$${event.price}` : 'Free'}
+                    </span>
+                    <button
+                      onClick={(e) => handleBookNow(event._id, e)}
+                      disabled={event.registeredUsers?.length >= event.capacity}
+                      className="book-btn"
+                    >
+                      {event.registeredUsers?.length >= event.capacity ? 'Sold Out' : 'Book Now'}
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
-          ))}
-        </div>
-
-        {filteredEvents.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-gray-500">No events found</p>
-          </div>
+          ))
         )}
       </div>
     </div>

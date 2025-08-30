@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { eventAPI } from '../../services/api';
 import SeatMap from '../../components/events/SeatMap';
 
 const EventDetailPage = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [event, setEvent] = useState(null);
   const [selectedSeat, setSelectedSeat] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -26,10 +27,21 @@ const EventDetailPage = () => {
     };
 
     loadEvent();
-  }, [id]); // فقط id dependency
+  }, [id]);
 
   const handleSeatSelect = (seatNumber) => {
     setSelectedSeat(seatNumber);
+  };
+
+  const handleBookNow = () => {
+    if (selectedSeat) {
+      navigate(`/booking/${event._id}`, { 
+        state: { 
+          seat: selectedSeat,
+          event: event 
+        } 
+      });
+    }
   };
 
   if (loading) {
@@ -200,17 +212,40 @@ const EventDetailPage = () => {
                   </div>
                   
                   <div className="mt-4 md:mt-0">
-                    <Link
-                      to={`/booking/${event._id}`}
-                      state={{ seat: selectedSeat }}
-                      className="bg-green-500 text-white px-8 py-3 rounded-lg hover:bg-green-600 font-semibold transition duration-200 inline-block"
+                    <button
+                      onClick={handleBookNow}
+                      className="bg-green-500 text-white px-8 py-3 rounded-lg hover:bg-green-600 font-semibold transition duration-200"
                     >
                       Continue to Booking
-                    </Link>
+                    </button>
                   </div>
                 </div>
               </div>
             )}
+
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 mt-8">
+              <Link
+                to="/events"
+                className="bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600 text-center font-semibold transition duration-200"
+              >
+                Back to Events
+              </Link>
+              
+              {!selectedSeat && event.availableSeats > 0 && (
+                <button
+                  onClick={() => {
+                    const availableSeat = event.seats?.find(seat => !seat.isBooked);
+                    if (availableSeat) {
+                      setSelectedSeat(availableSeat.seatNumber);
+                    }
+                  }}
+                  className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 font-semibold transition duration-200"
+                >
+                  Select Random Seat
+                </button>
+              )}
+            </div>
 
             {/* Additional Information */}
             <div className="mt-8 pt-8 border-t">
