@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { eventAPI } from '../../services/api';
 import './EventList.css';
@@ -14,7 +14,7 @@ const EventList = () => {
   const [sortBy, setSortBy] = useState('date');
   const [sortOrder, setSortOrder] = useState('asc');
 
-  const fetchEvents = async (page = 1) => {
+  const fetchEvents = useCallback(async (page = 1) => {
     try {
       setLoading(true);
       setError('');
@@ -27,21 +27,25 @@ const EventList = () => {
         sortOrder
       });
       
-      setEvents(response.data.events || response.data);
-      setTotalPages(response.data.totalPages || 1);
+      if (response.data.events) {
+        setEvents(response.data.events);
+        setTotalPages(response.data.totalPages || 1);
+      } else {
+        setEvents(response.data);
+        setTotalPages(1);
+      }
       setCurrentPage(page);
     } catch (error) {
+      setError('Failed to load events');
       console.error('Error fetching events:', error);
-      setError('Failed to load events. Please try again.');
-      setEvents([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [categoryFilter, searchTerm, sortBy, sortOrder]);
 
   useEffect(() => {
     fetchEvents(1);
-  }, [categoryFilter, sortBy, sortOrder]);
+  }, [fetchEvents]);
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -51,7 +55,7 @@ const EventList = () => {
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [searchTerm]);
+  }, [searchTerm, fetchEvents]);
 
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this event?')) {
@@ -102,7 +106,6 @@ const EventList = () => {
         </Link>
       </div>
 
-      {/* Filters and Search */}
       <div className="event-list-filters">
         <div className="search-box">
           <input
@@ -158,7 +161,6 @@ const EventList = () => {
         </div>
       )}
 
-      {/* Events Table */}
       <div className="events-table-container">
         <table className="events-table">
           <thead>
@@ -265,7 +267,6 @@ const EventList = () => {
         </table>
       </div>
 
-      {/* Pagination */}
       {totalPages > 1 && (
         <div className="pagination">
           <button

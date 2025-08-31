@@ -18,7 +18,6 @@ const EventDetailPage = () => {
         setError('');
         const response = await eventAPI.getEvent(id);
         
-        // Check if event is active and not expired
         if (!response.data.isActive) {
           setError('This event is no longer available');
           return;
@@ -46,29 +45,9 @@ const EventDetailPage = () => {
   }, [id]);
 
   const handleSeatSelect = (seatNumber) => {
-    // Check if seat is available before selecting
     const seat = event.seats.find(s => s.seatNumber === seatNumber);
     if (seat && !seat.isBooked) {
       setSelectedSeat(seatNumber);
-    }
-  };
-
-  const handleBookNow = () => {
-    if (selectedSeat) {
-      navigate(`/booking/${event._id}`, { 
-        state: { 
-          seat: selectedSeat,
-          event: {
-            _id: event._id,
-            title: event.title,
-            date: event.date,
-            time: event.time,
-            location: event.location,
-            price: event.price,
-            seatNumber: selectedSeat
-          }
-        } 
-      });
     }
   };
 
@@ -79,7 +58,6 @@ const EventDetailPage = () => {
       const response = await eventAPI.reserveSeat(event._id, { seatNumber: selectedSeat });
       
       if (response.data.message === 'Seat reserved successfully') {
-        // Refresh event data to update seat status
         const updatedEvent = await eventAPI.getEvent(id);
         setEvent(updatedEvent.data);
         
@@ -102,7 +80,6 @@ const EventDetailPage = () => {
       console.error('Error reserving seat:', error);
       if (error.response?.status === 400) {
         alert(error.response.data.message || 'Seat is already booked');
-        // Refresh event data
         const updatedEvent = await eventAPI.getEvent(id);
         setEvent(updatedEvent.data);
         setSelectedSeat(null);
@@ -177,14 +154,12 @@ const EventDetailPage = () => {
     );
   }
 
-  // Check if event is sold out or completed
   const isSoldOut = event.availableSeats === 0;
   const isCompleted = new Date(event.date) < new Date();
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">
       <div className="max-w-6xl mx-auto">
-        {/* Breadcrumb */}
         <nav className="mb-6">
           <ol className="flex items-center space-x-2 text-sm text-gray-600">
             <li>
@@ -196,7 +171,6 @@ const EventDetailPage = () => {
         </nav>
 
         <div className="bg-white rounded-lg shadow overflow-hidden">
-          {/* Event Header */}
           <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-8 text-white">
             <h1 className="text-3xl font-bold mb-2">{event.title}</h1>
             <p className="text-blue-100">{event.description}</p>
@@ -212,7 +186,6 @@ const EventDetailPage = () => {
 
           <div className="p-8">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-              {/* Event Details */}
               <div>
                 <h2 className="text-xl font-bold mb-4 text-gray-800">Event Details</h2>
                 <div className="space-y-3">
@@ -270,7 +243,6 @@ const EventDetailPage = () => {
                 </div>
               </div>
 
-              {/* Seat Map */}
               <div>
                 <h2 className="text-xl font-bold mb-4 text-gray-800">Select Your Seat</h2>
                 {isSoldOut ? (
@@ -293,7 +265,6 @@ const EventDetailPage = () => {
               </div>
             </div>
 
-            {/* Booking Section */}
             {selectedSeat && !isSoldOut && !isCompleted && (
               <div className="bg-green-50 border border-green-200 rounded-lg p-6">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between">
@@ -321,7 +292,6 @@ const EventDetailPage = () => {
               </div>
             )}
 
-            {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 mt-8">
               <Link
                 to="/events"
@@ -345,7 +315,6 @@ const EventDetailPage = () => {
               )}
             </div>
 
-            {/* Additional Information */}
             <div className="mt-8 pt-8 border-t">
               <h3 className="text-xl font-bold mb-4 text-gray-800">Additional Information</h3>
               <div className="prose prose-gray max-w-none">

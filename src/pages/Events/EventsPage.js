@@ -14,7 +14,7 @@ const EventsPage = () => {
   const [totalPages, setTotalPages] = useState(1);
   const navigate = useNavigate();
 
-  const fetchEvents = async (page = 1) => {
+  const fetchEvents = useCallback(async (page = 1) => {
     try {
       setLoading(true);
       setError('');
@@ -27,7 +27,6 @@ const EventsPage = () => {
         }
       });
       
-      // Handle both response formats (array or paginated object)
       if (response.data.events) {
         setEvents(response.data.events);
         setTotalPages(response.data.totalPages || 1);
@@ -42,11 +41,11 @@ const EventsPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [categoryFilter, searchTerm]);
 
   useEffect(() => {
     fetchEvents(1);
-  }, [categoryFilter]);
+  }, [fetchEvents]);
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -56,12 +55,11 @@ const EventsPage = () => {
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [searchTerm]);
+  }, [searchTerm, fetchEvents]);
 
   const filterEvents = useCallback(() => {
     let filtered = events;
 
-    // Client-side filtering for non-paginated responses
     if (searchTerm && totalPages === 1) {
       filtered = filtered.filter(event =>
         event.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -70,7 +68,6 @@ const EventsPage = () => {
       );
     }
 
-    // Client-side category filtering for non-paginated responses
     if (categoryFilter !== 'all' && totalPages === 1) {
       filtered = filtered.filter(event => event.category === categoryFilter);
     }
@@ -122,7 +119,6 @@ const EventsPage = () => {
         <p>Discover amazing events happening around you</p>
       </div>
 
-      {/* Search and Filter Section */}
       <div className="events-filters">
         <div className="search-box">
           <input
@@ -150,7 +146,6 @@ const EventsPage = () => {
         </select>
       </div>
 
-      {/* Events Grid */}
       <div className="events-grid">
         {filteredEvents.length === 0 ? (
           <div className="no-events">
@@ -234,7 +229,6 @@ const EventsPage = () => {
         )}
       </div>
 
-      {/* Pagination */}
       {totalPages > 1 && (
         <div className="events-pagination">
           <button
