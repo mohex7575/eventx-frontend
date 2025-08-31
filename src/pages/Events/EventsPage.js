@@ -10,16 +10,32 @@ const EventsPage = () => {
   const [filteredEvents, setFilteredEvents] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    fetchEvents();
-  }, []);
-
-  const fetchEvents = async () => {
+  const fetchEvents = async (page = 1) => {
     try {
-      const response = await api.get('/events');
-      setEvents(response.data);
+      setLoading(true);
+      setError('');
+      const response = await api.get('/events', {
+        params: {
+          page,
+          limit: 12,
+          category: categoryFilter !== 'all' ? categoryFilter : undefined,
+          search: searchTerm || undefined
+        }
+      });
+      
+      // Handle both response formats (array or paginated object)
+      if (response.data.events) {
+        setEvents(response.data.events);
+        setTotalPages(response.data.totalPages || 1);
+      } else {
+        setEvents(response.data);
+        setTotalPages(1);
+      }
+      setCurrentPage(page);
     } catch (error) {
       setError('Failed to load events');
       console.error('Error fetching events:', error);
@@ -28,29 +44,47 @@ const EventsPage = () => {
     }
   };
 
+  useEffect(() => {
+    fetchEvents(1);
+  }, [categoryFilter]);
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (searchTerm !== '') {
+        fetchEvents(1);
+      }
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm]);
+
   const filterEvents = useCallback(() => {
     let filtered = events;
 
-    // Filter by search term
-    if (searchTerm) {
+    // Client-side filtering for non-paginated responses
+    if (searchTerm && totalPages === 1) {
       filtered = filtered.filter(event =>
-        event.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        event.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        event.location.toLowerCase().includes(searchTerm.toLowerCase())
+        event.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        event.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        event.location?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
-    // Filter by category
-    if (categoryFilter !== 'all') {
+    // Client-side category filtering for non-paginated responses
+    if (categoryFilter !== 'all' && totalPages === 1) {
       filtered = filtered.filter(event => event.category === categoryFilter);
     }
 
     setFilteredEvents(filtered);
-  }, [events, searchTerm, categoryFilter]);
+  }, [events, searchTerm, categoryFilter, totalPages]);
 
   useEffect(() => {
-    filterEvents();
-  }, [filterEvents]);
+    if (totalPages === 1) {
+      filterEvents();
+    } else {
+      setFilteredEvents(events);
+    }
+  }, [events, filterEvents, totalPages]);
 
   const handleEventClick = (eventId) => {
     navigate(`/event/${eventId}`);
@@ -74,7 +108,7 @@ const EventsPage = () => {
     return (
       <div className="events-error">
         <p>{error}</p>
-        <button onClick={fetchEvents} className="retry-btn">
+        <button onClick={() => fetchEvents(1)} className="retry-btn">
           Try Again
         </button>
       </div>
@@ -112,6 +146,7 @@ const EventsPage = () => {
           <option value="concert">Concert</option>
           <option value="sports">Sports</option>
           <option value="networking">Networking</option>
+          <option value="other">Other</option>
         </select>
       </div>
 
@@ -130,17 +165,23 @@ const EventsPage = () => {
             >
               <div className="event-image">
                 {event.image ? (
-                  <img src={event.image} alt={event.name} />
+                  <img src={event.image} alt={event.title} />
                 ) : (
                   <div className="event-image-placeholder">
-                    {event.name.charAt(0)}
+                    {event.title?.charAt(0) || 'E'}
                   </div>
                 )}
                 <div className="event-category">{event.category}</div>
+                {new Date(event.date) < new Date() && (
+                  <div className="event-status-badge completed">Completed</div>
+                )}
+                {event.availableSeats === 0 && new Date(event.date) >= new Date() && (
+                  <div className="event-status-badge sold-out">Sold Out</div>
+                )}
               </div>
 
               <div className="event-content">
-                <h3 className="event-name">{event.name}</h3>
+                <h3 className="event-name">{event.title}</h3>
                 <p className="event-description">{event.description}</p>
                 
                 <div className="event-details">
@@ -150,7 +191,7 @@ const EventsPage = () => {
                   </div>
                   <div className="event-detail">
                     <span className="detail-icon">⏰</span>
-                    <span>{new Date(event.date).toLocaleTimeString()}</span>
+                    <span>{event.time}</span>
                   </div>
                   <div className="event-detail">
                     <span className="detail-icon">📍</span>
@@ -161,13 +202,13 @@ const EventsPage = () => {
                 <div className="event-footer">
                   <div className="event-capacity">
                     <span className="capacity-text">
-                      {event.registeredUsers?.length || 0}/{event.capacity} seats booked
+                      {event.totalSeats - event.availableSeats}/{event.totalSeats} seats booked
                     </span>
                     <div className="capacity-bar">
                       <div 
                         className="capacity-progress"
                         style={{
-                          width: `${((event.registeredUsers?.length || 0) / event.capacity) * 100}%`
+                          width: `${((event.totalSeats - event.availableSeats) / event.totalSeats) * 100}%`
                         }}
                       ></div>
                     </div>
@@ -179,10 +220,11 @@ const EventsPage = () => {
                     </span>
                     <button
                       onClick={(e) => handleBookNow(event._id, e)}
-                      disabled={event.registeredUsers?.length >= event.capacity}
+                      disabled={event.availableSeats === 0 || new Date(event.date) < new Date()}
                       className="book-btn"
                     >
-                      {event.registeredUsers?.length >= event.capacity ? 'Sold Out' : 'Book Now'}
+                      {event.availableSeats === 0 ? 'Sold Out' : 
+                       new Date(event.date) < new Date() ? 'Completed' : 'Book Now'}
                     </button>
                   </div>
                 </div>
@@ -191,6 +233,37 @@ const EventsPage = () => {
           ))
         )}
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="events-pagination">
+          <button
+            onClick={() => fetchEvents(currentPage - 1)}
+            disabled={currentPage === 1}
+            className="pagination-btn"
+          >
+            Previous
+          </button>
+          
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+            <button
+              key={page}
+              onClick={() => fetchEvents(page)}
+              className={`pagination-btn ${currentPage === page ? 'active' : ''}`}
+            >
+              {page}
+            </button>
+          ))}
+          
+          <button
+            onClick={() => fetchEvents(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className="pagination-btn"
+          >
+            Next
+          </button>
+        </div>
+      )}
     </div>
   );
 };

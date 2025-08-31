@@ -17,10 +17,26 @@ const EventDetailPage = () => {
         setLoading(true);
         setError('');
         const response = await eventAPI.getEvent(id);
+        
+        // Check if event is active and not expired
+        if (!response.data.isActive) {
+          setError('This event is no longer available');
+          return;
+        }
+        
+        if (new Date(response.data.date) < new Date()) {
+          setError('This event has already occurred');
+          return;
+        }
+        
         setEvent(response.data);
       } catch (error) {
         console.error('Error fetching event:', error);
-        setError('Failed to load event details. Please try again.');
+        if (error.response?.status === 404) {
+          setError('Event not found');
+        } else {
+          setError('Failed to load event details. Please try again.');
+        }
       } finally {
         setLoading(false);
       }
@@ -30,7 +46,11 @@ const EventDetailPage = () => {
   }, [id]);
 
   const handleSeatSelect = (seatNumber) => {
-    setSelectedSeat(seatNumber);
+    // Check if seat is available before selecting
+    const seat = event.seats.find(s => s.seatNumber === seatNumber);
+    if (seat && !seat.isBooked) {
+      setSelectedSeat(seatNumber);
+    }
   };
 
   const handleBookNow = () => {
@@ -38,9 +58,57 @@ const EventDetailPage = () => {
       navigate(`/booking/${event._id}`, { 
         state: { 
           seat: selectedSeat,
-          event: event 
+          event: {
+            _id: event._id,
+            title: event.title,
+            date: event.date,
+            time: event.time,
+            location: event.location,
+            price: event.price,
+            seatNumber: selectedSeat
+          }
         } 
       });
+    }
+  };
+
+  const handleReserveSeat = async () => {
+    if (!selectedSeat) return;
+
+    try {
+      const response = await eventAPI.reserveSeat(event._id, { seatNumber: selectedSeat });
+      
+      if (response.data.message === 'Seat reserved successfully') {
+        // Refresh event data to update seat status
+        const updatedEvent = await eventAPI.getEvent(id);
+        setEvent(updatedEvent.data);
+        
+        navigate(`/booking/${event._id}`, { 
+          state: { 
+            seat: selectedSeat,
+            event: {
+              _id: event._id,
+              title: event.title,
+              date: event.date,
+              time: event.time,
+              location: event.location,
+              price: event.price,
+              seatNumber: selectedSeat
+            }
+          } 
+        });
+      }
+    } catch (error) {
+      console.error('Error reserving seat:', error);
+      if (error.response?.status === 400) {
+        alert(error.response.data.message || 'Seat is already booked');
+        // Refresh event data
+        const updatedEvent = await eventAPI.getEvent(id);
+        setEvent(updatedEvent.data);
+        setSelectedSeat(null);
+      } else {
+        alert('Failed to reserve seat. Please try again.');
+      }
     }
   };
 
@@ -109,6 +177,10 @@ const EventDetailPage = () => {
     );
   }
 
+  // Check if event is sold out or completed
+  const isSoldOut = event.availableSeats === 0;
+  const isCompleted = new Date(event.date) < new Date();
+
   return (
     <div className="min-h-screen bg-gray-100 p-6">
       <div className="max-w-6xl mx-auto">
@@ -128,6 +200,14 @@ const EventDetailPage = () => {
           <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-8 text-white">
             <h1 className="text-3xl font-bold mb-2">{event.title}</h1>
             <p className="text-blue-100">{event.description}</p>
+            
+            {(isSoldOut || isCompleted) && (
+              <div className="mt-4 p-3 bg-white bg-opacity-20 rounded-lg">
+                <p className="font-semibold">
+                  {isCompleted ? 'This event has already occurred' : 'This event is sold out'}
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="p-8">
@@ -193,16 +273,28 @@ const EventDetailPage = () => {
               {/* Seat Map */}
               <div>
                 <h2 className="text-xl font-bold mb-4 text-gray-800">Select Your Seat</h2>
-                <SeatMap 
-                  event={event} 
-                  onSeatSelect={handleSeatSelect}
-                  selectedSeat={selectedSeat}
-                />
+                {isSoldOut ? (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+                    <p className="text-red-800 font-semibold">This event is completely sold out</p>
+                    <p className="text-red-600 mt-2">No seats are currently available</p>
+                  </div>
+                ) : isCompleted ? (
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
+                    <p className="text-gray-800 font-semibold">This event has already occurred</p>
+                    <p className="text-gray-600 mt-2">Booking is no longer available</p>
+                  </div>
+                ) : (
+                  <SeatMap 
+                    event={event} 
+                    onSeatSelect={handleSeatSelect}
+                    selectedSeat={selectedSeat}
+                  />
+                )}
               </div>
             </div>
 
             {/* Booking Section */}
-            {selectedSeat && (
+            {selectedSeat && !isSoldOut && !isCompleted && (
               <div className="bg-green-50 border border-green-200 rounded-lg p-6">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between">
                   <div>
@@ -211,12 +303,18 @@ const EventDetailPage = () => {
                     <p className="text-sm text-green-600 mt-1">Your seat will be reserved for 10 minutes</p>
                   </div>
                   
-                  <div className="mt-4 md:mt-0">
+                  <div className="mt-4 md:mt-0 space-x-2">
                     <button
-                      onClick={handleBookNow}
-                      className="bg-green-500 text-white px-8 py-3 rounded-lg hover:bg-green-600 font-semibold transition duration-200"
+                      onClick={handleReserveSeat}
+                      className="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 font-semibold transition duration-200"
                     >
-                      Continue to Booking
+                      Reserve & Continue
+                    </button>
+                    <button
+                      onClick={() => setSelectedSeat(null)}
+                      className="bg-gray-500 text-white px-4 py-3 rounded-lg hover:bg-gray-600 transition duration-200"
+                    >
+                      Change Seat
                     </button>
                   </div>
                 </div>
@@ -232,7 +330,7 @@ const EventDetailPage = () => {
                 Back to Events
               </Link>
               
-              {!selectedSeat && event.availableSeats > 0 && (
+              {!selectedSeat && event.availableSeats > 0 && !isCompleted && (
                 <button
                   onClick={() => {
                     const availableSeat = event.seats?.find(seat => !seat.isBooked);
@@ -262,6 +360,7 @@ const EventDetailPage = () => {
                     <li>• Bring your ID and ticket confirmation</li>
                     <li>• Seats are allocated on a first-come, first-served basis</li>
                     <li>• No refunds unless the event is cancelled</li>
+                    <li>• Seat reservations are held for 10 minutes during booking</li>
                   </ul>
                 </div>
               </div>
