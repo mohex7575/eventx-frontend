@@ -7,81 +7,38 @@ const EventsPage = () => {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [filteredEvents, setFilteredEvents] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const navigate = useNavigate();
 
-  const fetchEvents = useCallback(async (page = 1) => {
+  const fetchEvents = useCallback(async () => {
     try {
       setLoading(true);
       setError('');
-      const response = await api.get('/events', {
-        params: {
-          page,
-          limit: 12,
-          category: categoryFilter !== 'all' ? categoryFilter : undefined,
-          search: searchTerm || undefined
-        }
-      });
-      
-      if (response.data.events) {
-        setEvents(response.data.events);
-        setTotalPages(response.data.totalPages || 1);
-      } else {
-        setEvents(response.data);
-        setTotalPages(1);
-      }
-      setCurrentPage(page);
+      const response = await api.get('/events');
+      setEvents(response.data);
     } catch (error) {
       setError('Failed to load events');
       console.error('Error fetching events:', error);
     } finally {
       setLoading(false);
     }
-  }, [categoryFilter, searchTerm]);
+  }, []);
 
   useEffect(() => {
-    fetchEvents(1);
+    fetchEvents();
   }, [fetchEvents]);
 
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      if (searchTerm !== '') {
-        fetchEvents(1);
-      }
-    }, 500);
-
-    return () => clearTimeout(timeoutId);
-  }, [searchTerm, fetchEvents]);
-
-  const filterEvents = useCallback(() => {
-    let filtered = events;
-
-    if (searchTerm && totalPages === 1) {
-      filtered = filtered.filter(event =>
-        event.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        event.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        event.location?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    if (categoryFilter !== 'all' && totalPages === 1) {
-      filtered = filtered.filter(event => event.category === categoryFilter);
-    }
-
-    setFilteredEvents(filtered);
-  }, [events, searchTerm, categoryFilter, totalPages]);
-
-  useEffect(() => {
-    if (totalPages === 1) {
-      filterEvents();
-    } else {
-      setFilteredEvents(events);
-    }
-  }, [events, filterEvents, totalPages]);
+  // Filter events based on search term and category
+  const filteredEvents = events.filter(event => {
+    const matchesSearch = event.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         event.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         event.location?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesCategory = categoryFilter === 'all' || event.category === categoryFilter;
+    
+    return matchesSearch && matchesCategory;
+  });
 
   const handleEventClick = (eventId) => {
     navigate(`/event/${eventId}`);
@@ -105,7 +62,7 @@ const EventsPage = () => {
     return (
       <div className="events-error">
         <p>{error}</p>
-        <button onClick={() => fetchEvents(1)} className="retry-btn">
+        <button onClick={fetchEvents} className="retry-btn">
           Try Again
         </button>
       </div>
@@ -114,42 +71,64 @@ const EventsPage = () => {
 
   return (
     <div className="events-page">
+      {/* Header Section */}
       <div className="events-header">
-        <h1>Upcoming Events</h1>
-        <p>Discover amazing events happening around you</p>
+        <h1>🎉 Discover Amazing Events</h1>
+        <p>Find and book your next unforgettable experience</p>
       </div>
 
-      <div className="events-filters">
-        <div className="search-box">
-          <input
-            type="text"
-            placeholder="Search events..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="search-input"
-          />
-          <span className="search-icon">🔍</span>
+      {/* Search and Filter Section */}
+      <div className="search-filter-section">
+        <div className="search-container">
+          <div className="search-box">
+            <input
+              type="text"
+              placeholder="🔍 Search events by name, description, or location..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="search-input"
+            />
+          </div>
+          
+          <div className="filter-container">
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="category-filter"
+            >
+              <option value="all">All Categories</option>
+              <option value="conference">Conference</option>
+              <option value="workshop">Workshop</option>
+              <option value="concert">Concert</option>
+              <option value="sports">Sports</option>
+              <option value="networking">Networking</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
         </div>
 
-        <select
-          value={categoryFilter}
-          onChange={(e) => setCategoryFilter(e.target.value)}
-          className="category-filter"
-        >
-          <option value="all">All Categories</option>
-          <option value="conference">Conference</option>
-          <option value="workshop">Workshop</option>
-          <option value="concert">Concert</option>
-          <option value="sports">Sports</option>
-          <option value="networking">Networking</option>
-          <option value="other">Other</option>
-        </select>
+        {/* Results Count */}
+        <div className="results-info">
+          <p>Found {filteredEvents.length} event(s)</p>
+        </div>
       </div>
 
+      {/* Events Grid */}
       <div className="events-grid">
         {filteredEvents.length === 0 ? (
           <div className="no-events">
-            <p>No events found matching your criteria</p>
+            <div className="no-events-icon">🔍</div>
+            <h3>No events found</h3>
+            <p>Try adjusting your search criteria or browse all categories</p>
+            <button 
+              onClick={() => {
+                setSearchTerm('');
+                setCategoryFilter('all');
+              }}
+              className="clear-filters-btn"
+            >
+              Clear All Filters
+            </button>
           </div>
         ) : (
           filteredEvents.map((event) => (
@@ -163,10 +142,12 @@ const EventsPage = () => {
                   <img src={event.image} alt={event.title} />
                 ) : (
                   <div className="event-image-placeholder">
-                    {event.title?.charAt(0) || 'E'}
+                    <span className="placeholder-icon">🎭</span>
                   </div>
                 )}
-                <div className="event-category">{event.category}</div>
+                <div className="event-category-badge">{event.category}</div>
+                
+                {/* Status Badges */}
                 {new Date(event.date) < new Date() && (
                   <div className="event-status-badge completed">Completed</div>
                 )}
@@ -176,7 +157,7 @@ const EventsPage = () => {
               </div>
 
               <div className="event-content">
-                <h3 className="event-name">{event.title}</h3>
+                <h3 className="event-title">{event.title}</h3>
                 <p className="event-description">{event.description}</p>
                 
                 <div className="event-details">
@@ -197,7 +178,7 @@ const EventsPage = () => {
                 <div className="event-footer">
                   <div className="event-capacity">
                     <span className="capacity-text">
-                      {event.totalSeats - event.availableSeats}/{event.totalSeats} seats booked
+                      {event.availableSeats} seats available
                     </span>
                     <div className="capacity-bar">
                       <div 
@@ -228,36 +209,6 @@ const EventsPage = () => {
           ))
         )}
       </div>
-
-      {totalPages > 1 && (
-        <div className="events-pagination">
-          <button
-            onClick={() => fetchEvents(currentPage - 1)}
-            disabled={currentPage === 1}
-            className="pagination-btn"
-          >
-            Previous
-          </button>
-          
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-            <button
-              key={page}
-              onClick={() => fetchEvents(page)}
-              className={`pagination-btn ${currentPage === page ? 'active' : ''}`}
-            >
-              {page}
-            </button>
-          ))}
-          
-          <button
-            onClick={() => fetchEvents(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            className="pagination-btn"
-          >
-            Next
-          </button>
-        </div>
-      )}
     </div>
   );
 };
