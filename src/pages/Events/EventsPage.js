@@ -1,5 +1,7 @@
-import React, { useState, useEffect, useCallback } from "react";
-import api from "../services/api";
+import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import api from '../../services/api';
+import './EventsPage.css';
 
 const EventsPage = () => {
   const [events, setEvents] = useState([]);
