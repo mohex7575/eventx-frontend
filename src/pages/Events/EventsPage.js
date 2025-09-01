@@ -17,13 +17,8 @@ const EventsPage = () => {
       setError('');
       const response = await api.get('/events');
 
-      // ✅ Ensure the response is always an array
-      const eventsData = Array.isArray(response.data)
-        ? response.data
-        : response.data.events || [];
-
-      // ✅ Sort by date (latest first)
-      const sortedEvents = eventsData.sort(
+      // Original line caused error if response.data is not array
+      const sortedEvents = response.data.sort(
         (a, b) => new Date(b.date) - new Date(a.date)
       );
 
@@ -40,7 +35,6 @@ const EventsPage = () => {
     fetchEvents();
   }, [fetchEvents]);
 
-  // Filter events based on search term and category
   const filteredEvents = events.filter(event => {
     const matchesSearch =
       event.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -84,13 +78,11 @@ const EventsPage = () => {
 
   return (
     <div className="events-page">
-      {/* Header Section */}
       <div className="events-header">
         <h1>🎉 Discover Amazing Events</h1>
         <p>Find and book your next unforgettable experience</p>
       </div>
 
-      {/* Search and Filter Section */}
       <div className="search-filter-section">
         <div className="search-container">
           <div className="search-box">
@@ -119,13 +111,11 @@ const EventsPage = () => {
           </div>
         </div>
 
-        {/* Results Count */}
         <div className="results-info">
           <p>Found {filteredEvents.length} event(s)</p>
         </div>
       </div>
 
-      {/* Events Grid */}
       <div className="events-grid">
         {filteredEvents.length === 0 ? (
           <div className="no-events">
@@ -158,8 +148,6 @@ const EventsPage = () => {
                   </div>
                 )}
                 <div className="event-category-badge">{event.category}</div>
-
-                {/* Status Badges */}
                 {new Date(event.date) < new Date() && (
                   <div className="event-status-badge completed">Completed</div>
                 )}
