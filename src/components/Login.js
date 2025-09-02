@@ -19,17 +19,11 @@ const Login = ({ onLogin }) => {
   const navigate = useNavigate();
 
   const handleLoginChange = (e) => {
-    setLoginData({
-      ...loginData,
-      [e.target.name]: e.target.value
-    });
+    setLoginData({ ...loginData, [e.target.name]: e.target.value });
   };
 
   const handleRegisterChange = (e) => {
-    setRegisterData({
-      ...registerData,
-      [e.target.name]: e.target.value
-    });
+    setRegisterData({ ...registerData, [e.target.name]: e.target.value });
   };
 
   const handleLoginSubmit = async (e) => {
@@ -46,7 +40,6 @@ const Login = ({ onLogin }) => {
       localStorage.setItem('userName', name);
 
       if (onLogin) onLogin();
-
       if (role === 'admin') navigate('/admin');
       else navigate('/events');
     } catch (error) {
@@ -58,7 +51,6 @@ const Login = ({ onLogin }) => {
 
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
-
     if (registerData.password !== registerData.confirmPassword) {
       setError('Passwords do not match');
       return;
@@ -89,13 +81,22 @@ const Login = ({ onLogin }) => {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-r from-purple-100 to-blue-50 px-4">
-      <div className="bg-white shadow-2xl rounded-2xl p-8 w-full max-w-lg">
-        <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">
+      <div className="bg-white shadow-2xl rounded-2xl p-8 w-full max-w-lg text-center">
+
+        {/* شعار EventX أيقوني + نص */}
+        <div className="mb-6 flex items-center justify-center gap-2">
+          <span className="text-4xl animate-bounce">🎫</span>
+          <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-blue-500">
+            EventX
+          </h1>
+        </div>
+
+        <h2 className="text-2xl font-bold text-gray-800 mb-6">
           {isLogin ? 'Welcome Back! 👋' : 'Create Your Account 🎉'}
         </h2>
 
         {error && (
-          <div className="bg-red-100 text-red-700 border border-red-400 px-4 py-2 rounded mb-4 text-center">
+          <div className="bg-red-100 text-red-700 border border-red-400 px-4 py-2 rounded mb-4">
             {error}
           </div>
         )}
@@ -163,7 +164,7 @@ const Login = ({ onLogin }) => {
           </button>
         </form>
 
-        <p className="mt-4 text-center text-gray-600">
+        <p className="mt-4 text-gray-600">
           {isLogin ? "Don't have an account? " : "Already have an account? "}
           <button
             type="button"
