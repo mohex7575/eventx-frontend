@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { eventAPI } from '../../services/api';
-import './EventList.css';
 
 const EventList = () => {
   const [events, setEvents] = useState([]);
@@ -26,14 +25,9 @@ const EventList = () => {
         sortBy,
         sortOrder
       });
-      
-      if (response.data.events) {
-        setEvents(response.data.events);
-        setTotalPages(response.data.totalPages || 1);
-      } else {
-        setEvents(response.data);
-        setTotalPages(1);
-      }
+
+      setEvents(response.data.events || []);
+      setTotalPages(response.data.totalPages || 1);
       setCurrentPage(page);
     } catch (error) {
       setError('Failed to load events');
@@ -49,11 +43,8 @@ const EventList = () => {
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      if (searchTerm !== '') {
-        fetchEvents(1);
-      }
+      fetchEvents(1);
     }, 500);
-
     return () => clearTimeout(timeoutId);
   }, [searchTerm, fetchEvents]);
 
@@ -69,10 +60,10 @@ const EventList = () => {
     }
   };
 
-  const handleGenerateQR = async (eventId) => {
+  const handleGenerateQR = async (id) => {
     try {
-      const response = await eventAPI.generateQRCode(eventId);
-      alert(`QR Code generated successfully!\nData: ${response.data.qrCodeData}`);
+      const response = await eventAPI.generateQRCode(id);
+      alert(`QR Code generated!\nData: ${response.data.qrCodeData}`);
     } catch (error) {
       console.error('Error generating QR code:', error);
       alert('Failed to generate QR code. Please try again.');
@@ -90,38 +81,41 @@ const EventList = () => {
 
   if (loading) {
     return (
-      <div className="event-list-loading">
-        <div className="loading-spinner"></div>
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <div className="loader mb-4"></div>
         <p>Loading events...</p>
       </div>
     );
   }
 
   return (
-    <div className="event-list-container">
-      <div className="event-list-header">
-        <h2 className="event-list-title">Event Management</h2>
-        <Link to="/admin/events/create" className="create-event-btn">
+    <div className="max-w-7xl mx-auto px-4 py-6">
+      <div className="flex flex-col md:flex-row md:justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold mb-4 md:mb-0">Event Management</h2>
+        <Link
+          to="/admin/events/create"
+          className="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 transition"
+        >
           Create New Event
         </Link>
       </div>
 
-      <div className="event-list-filters">
-        <div className="search-box">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+        <div className="relative w-full md:w-1/3">
           <input
             type="text"
             placeholder="Search events..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="search-input"
+            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
           />
-          <span className="search-icon">🔍</span>
+          <span className="absolute right-3 top-2 text-gray-400">🔍</span>
         </div>
 
         <select
           value={categoryFilter}
           onChange={(e) => setCategoryFilter(e.target.value)}
-          className="category-filter"
+          className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
         >
           <option value="all">All Categories</option>
           <option value="conference">Conference</option>
@@ -132,12 +126,12 @@ const EventList = () => {
           <option value="other">Other</option>
         </select>
 
-        <div className="sort-options">
+        <div className="flex items-center gap-2">
           <span>Sort by:</span>
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className="sort-select"
+            className="px-2 py-1 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
           >
             <option value="date">Date</option>
             <option value="title">Title</option>
@@ -145,7 +139,7 @@ const EventList = () => {
           </select>
           <button
             onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-            className="sort-order-btn"
+            className="px-2 py-1 border rounded-lg"
           >
             {sortOrder === 'asc' ? '↑' : '↓'}
           </button>
@@ -153,109 +147,92 @@ const EventList = () => {
       </div>
 
       {error && (
-        <div className="error-message">
-          <p>{error}</p>
-          <button onClick={() => fetchEvents(1)} className="retry-btn">
-            Try Again
+        <div className="bg-red-100 text-red-700 px-4 py-2 rounded mb-4 flex justify-between items-center">
+          <span>{error}</span>
+          <button onClick={() => fetchEvents(1)} className="text-purple-500 font-semibold">
+            Retry
           </button>
         </div>
       )}
 
-      <div className="events-table-container">
-        <table className="events-table">
-          <thead>
+      <div className="overflow-x-auto">
+        <table className="min-w-full bg-white shadow rounded-lg">
+          <thead className="bg-purple-100 text-left">
             <tr>
-              <th onClick={() => handleSort('title')}>
+              <th className="px-4 py-2 cursor-pointer" onClick={() => handleSort('title')}>
                 Title {sortBy === 'title' && (sortOrder === 'asc' ? '↑' : '↓')}
               </th>
-              <th onClick={() => handleSort('date')}>
+              <th className="px-4 py-2 cursor-pointer" onClick={() => handleSort('date')}>
                 Date {sortBy === 'date' && (sortOrder === 'asc' ? '↑' : '↓')}
               </th>
-              <th>Location</th>
-              <th>Category</th>
-              <th onClick={() => handleSort('price')}>
+              <th className="px-4 py-2">Location</th>
+              <th className="px-4 py-2">Category</th>
+              <th className="px-4 py-2 cursor-pointer" onClick={() => handleSort('price')}>
                 Price {sortBy === 'price' && (sortOrder === 'asc' ? '↑' : '↓')}
               </th>
-              <th>Seats</th>
-              <th>Status</th>
-              <th>Actions</th>
+              <th className="px-4 py-2">Seats</th>
+              <th className="px-4 py-2">Status</th>
+              <th className="px-4 py-2">Actions</th>
             </tr>
           </thead>
           <tbody>
             {events.length === 0 ? (
               <tr>
-                <td colSpan="8" className="no-events">
+                <td colSpan="8" className="text-center px-4 py-6">
                   No events found
                 </td>
               </tr>
             ) : (
               events.map((event) => (
-                <tr key={event._id} className="event-row">
-                  <td className="event-title">
-                    <Link to={`/event/${event._id}`} className="event-link">
+                <tr key={event._id} className="border-t hover:bg-gray-50">
+                  <td className="px-4 py-2">
+                    <Link to={`/event/${event._id}`} className="text-purple-600 hover:underline">
                       {event.title}
                     </Link>
                   </td>
-                  <td className="event-date">
-                    {new Date(event.date).toLocaleDateString()}
-                    <br />
+                  <td className="px-4 py-2">
+                    {new Date(event.date).toLocaleDateString()} <br />
                     <small>{event.time}</small>
                   </td>
-                  <td className="event-location">{event.location}</td>
-                  <td className="event-category">
-                    <span className={`category-badge ${event.category}`}>
+                  <td className="px-4 py-2">{event.location}</td>
+                  <td className="px-4 py-2">
+                    <span className="bg-purple-200 text-purple-700 px-2 py-1 rounded-full text-xs">
                       {event.category}
                     </span>
                   </td>
-                  <td className="event-price">
-                    ${event.price}
+                  <td className="px-4 py-2">${event.price}</td>
+                  <td className="px-4 py-2">
+                    {event.availableSeats} / {event.totalSeats}
                   </td>
-                  <td className="event-seats">
-                    <div className="seats-info">
-                      <span className="seats-available">{event.availableSeats}</span>
-                      <span className="seats-total">/ {event.totalSeats}</span>
-                    </div>
-                    <div className="seats-progress">
-                      <div 
-                        className="seats-progress-bar"
-                        style={{
-                          width: `${((event.totalSeats - event.availableSeats) / event.totalSeats) * 100}%`
-                        }}
-                      ></div>
-                    </div>
+                  <td className="px-4 py-2">
+                    {new Date(event.date) < new Date()
+                      ? 'Completed'
+                      : event.availableSeats === 0
+                      ? 'Sold Out'
+                      : 'Active'}
                   </td>
-                  <td className="event-status">
-                    <span className={`status-badge ${
-                      new Date(event.date) < new Date() ? 'completed' :
-                      event.availableSeats === 0 ? 'sold-out' :
-                      'active'
-                    }`}>
-                      {new Date(event.date) < new Date() ? 'Completed' :
-                       event.availableSeats === 0 ? 'Sold Out' : 'Active'}
-                    </span>
-                  </td>
-                  <td className="event-actions">
+                  <td className="px-4 py-2 flex flex-wrap gap-1">
                     <Link
                       to={`/admin/events/edit/${event._id}`}
-                      className="action-btn edit-btn"
+                      className="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 text-sm"
                     >
                       Edit
                     </Link>
                     <button
                       onClick={() => handleDelete(event._id)}
-                      className="action-btn delete-btn"
+                      className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 text-sm"
                     >
                       Delete
                     </button>
                     <button
                       onClick={() => handleGenerateQR(event._id)}
-                      className="action-btn qr-btn"
+                      className="bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600 text-sm"
                     >
                       QR Code
                     </button>
                     <Link
                       to={`/event/${event._id}`}
-                      className="action-btn view-btn"
+                      className="bg-gray-500 text-white px-2 py-1 rounded hover:bg-gray-600 text-sm"
                     >
                       View
                     </Link>
@@ -268,29 +245,27 @@ const EventList = () => {
       </div>
 
       {totalPages > 1 && (
-        <div className="pagination">
+        <div className="flex justify-center mt-4 gap-2 flex-wrap">
           <button
             onClick={() => fetchEvents(currentPage - 1)}
             disabled={currentPage === 1}
-            className="pagination-btn"
+            className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
           >
             Previous
           </button>
-          
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
             <button
               key={page}
               onClick={() => fetchEvents(page)}
-              className={`pagination-btn ${currentPage === page ? 'active' : ''}`}
+              className={`px-3 py-1 rounded ${currentPage === page ? 'bg-purple-500 text-white' : 'bg-gray-200'}`}
             >
               {page}
             </button>
           ))}
-          
           <button
             onClick={() => fetchEvents(currentPage + 1)}
             disabled={currentPage === totalPages}
-            className="pagination-btn"
+            className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
           >
             Next
           </button>
