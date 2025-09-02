@@ -4,71 +4,40 @@ import api from '../services/api';
 
 const Login = ({ onLogin }) => {
   const [isLogin, setIsLogin] = useState(true);
-  const [loginData, setLoginData] = useState({
-    email: '',
-    password: ''
-  });
-  const [registerData, setRegisterData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: ''
-  });
+  const [loginData, setLoginData] = useState({ email: '', password: '' });
+  const [registerData, setRegisterData] = useState({ name: '', email: '', password: '', confirmPassword: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const handleLoginChange = (e) => {
-    setLoginData({
-      ...loginData,
-      [e.target.name]: e.target.value
-    });
-  };
+  const handleLoginChange = e => setLoginData({ ...loginData, [e.target.name]: e.target.value });
+  const handleRegisterChange = e => setRegisterData({ ...registerData, [e.target.name]: e.target.value });
 
-  const handleLoginSubmit = async (e) => {
+  const handleLoginSubmit = async e => {
     e.preventDefault();
-    setLoading(true);
-    setError('');
+    setLoading(true); setError('');
 
     try {
       const response = await api.post('/auth/login', loginData);
       const { token, role, name } = response.data;
-      
       localStorage.setItem('token', token);
       localStorage.setItem('userRole', role);
       localStorage.setItem('userName', name);
-      
       if (onLogin) onLogin();
-      
-      if (role === 'admin') {
-        navigate('/admin');
-      } else {
-        navigate('/events');
-      }
-    } catch (error) {
-      setError(error.response?.data?.message || 'Login failed');
+      navigate(role === 'admin' ? '/admin' : '/events');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Login failed');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleRegisterChange = (e) => {
-    setRegisterData({
-      ...registerData,
-      [e.target.name]: e.target.value
-    });
-  };
-
-  const handleRegisterSubmit = async (e) => {
+  const handleRegisterSubmit = async e => {
     e.preventDefault();
-    
     if (registerData.password !== registerData.confirmPassword) {
-      setError('Passwords do not match');
-      return;
+      setError('Passwords do not match'); return;
     }
-
-    setLoading(true);
-    setError('');
+    setLoading(true); setError('');
 
     try {
       const response = await api.post('/auth/register', {
@@ -76,140 +45,113 @@ const Login = ({ onLogin }) => {
         email: registerData.email,
         password: registerData.password
       });
-
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('userRole', response.data.role);
       localStorage.setItem('userName', response.data.name);
-      
       if (onLogin) onLogin();
       navigate('/events');
-    } catch (error) {
-      setError(error.response?.data?.message || 'Registration failed');
-    } finally {
-      setLoading(false);
-    }
+    } catch (err) {
+      setError(err.response?.data?.message || 'Registration failed');
+    } finally { setLoading(false); }
   };
 
   return (
-    <div className="login-container">
-      <div className="login-card">
-        <h2 className="login-title">
-          {isLogin ? 'Welcome back! 👋' : 'Create your new account 🎉'}
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-r from-purple-100 to-blue-50 p-4">
+      <div className="bg-white shadow-2xl rounded-2xl p-8 w-full max-w-md">
+        <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">
+          {isLogin ? 'Welcome Back! 👋' : 'Create Your Account 🎉'}
         </h2>
-        
-        {error && <div className="error-message">{error}</div>}
-        
+
+        {error && (
+          <div className="bg-red-100 text-red-700 border border-red-400 px-4 py-2 rounded mb-4 text-center">
+            {error}
+          </div>
+        )}
+
         {isLogin ? (
-          <form onSubmit={handleLoginSubmit} className="login-form">
-            <div className="form-group">
-              <label className="form-label">Email</label>
-              <input
-                type="email"
-                name="email"
-                value={loginData.email}
-                onChange={handleLoginChange}
-                className="form-input"
-                placeholder="Enter your email"
-                required
-              />
-            </div>
-            
-            <div className="form-group">
-              <label className="form-label">Password</label>
-              <input
-                type="password"
-                name="password"
-                value={loginData.password}
-                onChange={handleLoginChange}
-                className="form-input"
-                placeholder="Enter your password"
-                required
-              />
-            </div>
-            
+          <form onSubmit={handleLoginSubmit} className="space-y-4">
+            <input
+              type="email"
+              name="email"
+              value={loginData.email}
+              onChange={handleLoginChange}
+              placeholder="Email"
+              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+              required
+            />
+            <input
+              type="password"
+              name="password"
+              value={loginData.password}
+              onChange={handleLoginChange}
+              placeholder="Password"
+              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+              required
+            />
             <button
               type="submit"
               disabled={loading}
-              className="login-btn"
+              className="w-full bg-purple-500 text-white py-2 rounded-lg font-semibold hover:bg-purple-600 transition duration-200 disabled:opacity-50"
             >
               {loading ? 'Logging in...' : 'Login'}
             </button>
           </form>
         ) : (
-          <form onSubmit={handleRegisterSubmit} className="login-form">
-            <div className="form-group">
-              <label className="form-label">Full Name</label>
-              <input
-                type="text"
-                name="name"
-                value={registerData.name}
-                onChange={handleRegisterChange}
-                className="form-input"
-                placeholder="Enter your full name"
-                required
-              />
-            </div>
-            
-            <div className="form-group">
-              <label className="form-label">Email</label>
-              <input
-                type="email"
-                name="email"
-                value={registerData.email}
-                onChange={handleRegisterChange}
-                className="form-input"
-                placeholder="Enter your email"
-                required
-              />
-            </div>
-            
-            <div className="form-group">
-              <label className="form-label">Password</label>
-              <input
-                type="password"
-                name="password"
-                value={registerData.password}
-                onChange={handleRegisterChange}
-                className="form-input"
-                placeholder="Create a strong password"
-                required
-              />
-            </div>
-            
-            <div className="form-group">
-              <label className="form-label">Confirm Password</label>
-              <input
-                type="password"
-                name="confirmPassword"
-                value={registerData.confirmPassword}
-                onChange={handleRegisterChange}
-                className="form-input"
-                placeholder="Re-enter your password"
-                required
-              />
-            </div>
-            
+          <form onSubmit={handleRegisterSubmit} className="space-y-4">
+            <input
+              type="text"
+              name="name"
+              value={registerData.name}
+              onChange={handleRegisterChange}
+              placeholder="Full Name"
+              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+              required
+            />
+            <input
+              type="email"
+              name="email"
+              value={registerData.email}
+              onChange={handleRegisterChange}
+              placeholder="Email"
+              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+              required
+            />
+            <input
+              type="password"
+              name="password"
+              value={registerData.password}
+              onChange={handleRegisterChange}
+              placeholder="Password"
+              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+              required
+            />
+            <input
+              type="password"
+              name="confirmPassword"
+              value={registerData.confirmPassword}
+              onChange={handleRegisterChange}
+              placeholder="Confirm Password"
+              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+              required
+            />
             <button
               type="submit"
               disabled={loading}
-              className="register-btn"
+              className="w-full bg-purple-500 text-white py-2 rounded-lg font-semibold hover:bg-purple-600 transition duration-200 disabled:opacity-50"
             >
               {loading ? 'Creating account...' : 'Create Account'}
             </button>
           </form>
         )}
-        
-        <p className="login-switch">
+
+        <p className="mt-4 text-center text-gray-600">
           {isLogin ? "Don't have an account? " : "Already have an account? "}
           <button
             type="button"
-            onClick={() => {
-              setIsLogin(!isLogin);
-              setError('');
-            }}
-            className="switch-btn"
+            onClick={() => { setIsLogin(!isLogin); setError(''); }}
+            className="text-purple-500 font-semibold hover:underline ml-1"
           >
-            {isLogin ? 'Register now' : 'Login to your account'}
+            {isLogin ? 'Register now' : 'Login here'}
           </button>
         </p>
       </div>
