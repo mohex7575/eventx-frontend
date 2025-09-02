@@ -12,24 +12,34 @@ const EventsPage = () => {
   const navigate = useNavigate();
 
   const fetchEvents = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError('');
-      const response = await api.get('/events');
+  try {
+    setLoading(true);
+    setError('');
 
-      // Original line caused error if response.data is not array
-      const sortedEvents = response.data.sort(
-        (a, b) => new Date(b.date) - new Date(a.date)
-      );
+    const response = await api.get('/events');
 
-      setEvents(sortedEvents);
-    } catch (error) {
-      setError('Failed to load events');
-      console.error('Error fetching events:', error);
-    } finally {
-      setLoading(false);
+    // تحقق إذا البيانات Array أو داخل response.data.events
+    let eventsData = [];
+    if (Array.isArray(response.data)) {
+      eventsData = response.data;
+    } else if (Array.isArray(response.data.events)) {
+      eventsData = response.data.events;
+    } else {
+      console.error("Unexpected response format:", response.data);
     }
-  }, []);
+
+    // ترتيب الأحداث حسب التاريخ (اختياري)
+    eventsData.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    setEvents(eventsData);
+  } catch (error) {
+    setError('Failed to load events');
+    console.error('Error fetching events:', error);
+  } finally {
+    setLoading(false);
+  }
+}, []);
+
 
   useEffect(() => {
     fetchEvents();
