@@ -4,40 +4,68 @@ import api from '../services/api';
 
 const Login = ({ onLogin }) => {
   const [isLogin, setIsLogin] = useState(true);
-  const [loginData, setLoginData] = useState({ email: '', password: '' });
-  const [registerData, setRegisterData] = useState({ name: '', email: '', password: '', confirmPassword: '' });
+  const [loginData, setLoginData] = useState({
+    email: '',
+    password: ''
+  });
+  const [registerData, setRegisterData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: ''
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const handleLoginChange = e => setLoginData({ ...loginData, [e.target.name]: e.target.value });
-  const handleRegisterChange = e => setRegisterData({ ...registerData, [e.target.name]: e.target.value });
+  const handleLoginChange = (e) => {
+    setLoginData({
+      ...loginData,
+      [e.target.name]: e.target.value
+    });
+  };
 
-  const handleLoginSubmit = async e => {
+  const handleRegisterChange = (e) => {
+    setRegisterData({
+      ...registerData,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  const handleLoginSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true); setError('');
+    setLoading(true);
+    setError('');
 
     try {
       const response = await api.post('/auth/login', loginData);
       const { token, role, name } = response.data;
+
       localStorage.setItem('token', token);
       localStorage.setItem('userRole', role);
       localStorage.setItem('userName', name);
+
       if (onLogin) onLogin();
-      navigate(role === 'admin' ? '/admin' : '/events');
-    } catch (err) {
-      setError(err.response?.data?.message || 'Login failed');
+
+      if (role === 'admin') navigate('/admin');
+      else navigate('/events');
+    } catch (error) {
+      setError(error.response?.data?.message || 'Login failed');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleRegisterSubmit = async e => {
+  const handleRegisterSubmit = async (e) => {
     e.preventDefault();
+
     if (registerData.password !== registerData.confirmPassword) {
-      setError('Passwords do not match'); return;
+      setError('Passwords do not match');
+      return;
     }
-    setLoading(true); setError('');
+
+    setLoading(true);
+    setError('');
 
     try {
       const response = await api.post('/auth/register', {
@@ -45,19 +73,23 @@ const Login = ({ onLogin }) => {
         email: registerData.email,
         password: registerData.password
       });
+
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('userRole', response.data.role);
       localStorage.setItem('userName', response.data.name);
+
       if (onLogin) onLogin();
       navigate('/events');
-    } catch (err) {
-      setError(err.response?.data?.message || 'Registration failed');
-    } finally { setLoading(false); }
+    } catch (error) {
+      setError(error.response?.data?.message || 'Registration failed');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-r from-purple-100 to-blue-50 p-4">
-      <div className="bg-white shadow-2xl rounded-2xl p-8 w-full max-w-md">
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-r from-purple-100 to-blue-50 px-4">
+      <div className="bg-white shadow-2xl rounded-2xl p-8 w-full max-w-lg">
         <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">
           {isLogin ? 'Welcome Back! 👋' : 'Create Your Account 🎉'}
         </h2>
@@ -68,36 +100,11 @@ const Login = ({ onLogin }) => {
           </div>
         )}
 
-        {isLogin ? (
-          <form onSubmit={handleLoginSubmit} className="space-y-4">
-            <input
-              type="email"
-              name="email"
-              value={loginData.email}
-              onChange={handleLoginChange}
-              placeholder="Email"
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
-              required
-            />
-            <input
-              type="password"
-              name="password"
-              value={loginData.password}
-              onChange={handleLoginChange}
-              placeholder="Password"
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
-              required
-            />
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-purple-500 text-white py-2 rounded-lg font-semibold hover:bg-purple-600 transition duration-200 disabled:opacity-50"
-            >
-              {loading ? 'Logging in...' : 'Login'}
-            </button>
-          </form>
-        ) : (
-          <form onSubmit={handleRegisterSubmit} className="space-y-4">
+        <form
+          onSubmit={isLogin ? handleLoginSubmit : handleRegisterSubmit}
+          className="space-y-4"
+        >
+          {!isLogin && (
             <input
               type="text"
               name="name"
@@ -107,24 +114,29 @@ const Login = ({ onLogin }) => {
               className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
               required
             />
-            <input
-              type="email"
-              name="email"
-              value={registerData.email}
-              onChange={handleRegisterChange}
-              placeholder="Email"
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
-              required
-            />
-            <input
-              type="password"
-              name="password"
-              value={registerData.password}
-              onChange={handleRegisterChange}
-              placeholder="Password"
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
-              required
-            />
+          )}
+
+          <input
+            type="email"
+            name="email"
+            value={isLogin ? loginData.email : registerData.email}
+            onChange={isLogin ? handleLoginChange : handleRegisterChange}
+            placeholder="Email"
+            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+            required
+          />
+
+          <input
+            type="password"
+            name="password"
+            value={isLogin ? loginData.password : registerData.password}
+            onChange={isLogin ? handleLoginChange : handleRegisterChange}
+            placeholder="Password"
+            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+            required
+          />
+
+          {!isLogin && (
             <input
               type="password"
               name="confirmPassword"
@@ -134,15 +146,22 @@ const Login = ({ onLogin }) => {
               className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
               required
             />
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-purple-500 text-white py-2 rounded-lg font-semibold hover:bg-purple-600 transition duration-200 disabled:opacity-50"
-            >
-              {loading ? 'Creating account...' : 'Create Account'}
-            </button>
-          </form>
-        )}
+          )}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-purple-500 text-white py-2 rounded-lg font-semibold hover:bg-purple-600 transition duration-200 disabled:opacity-50"
+          >
+            {loading
+              ? isLogin
+                ? 'Logging in...'
+                : 'Creating account...'
+              : isLogin
+              ? 'Login'
+              : 'Create Account'}
+          </button>
+        </form>
 
         <p className="mt-4 text-center text-gray-600">
           {isLogin ? "Don't have an account? " : "Already have an account? "}
