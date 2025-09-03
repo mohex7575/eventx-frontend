@@ -1,28 +1,22 @@
-/* src/App.css - أنماط جديدة كاملة */
+/* src/App.css - نسخة معدلة */
 
+/* إعادة ضبط أساسية */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-body {
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
   font-family: 'Poppins', sans-serif;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
-.App {
-  width: 100%;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-/* تنسيقات صفحة التسجيل الجديدة */
+/* =========================
+   صفحة تسجيل الدخول
+========================= */
 .login-container {
   min-height: 100vh;
   display: flex;
@@ -67,6 +61,7 @@ body {
   z-index: 1;
   transform: translateY(0);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+  animation: slideIn 0.6s ease-out;
 }
 
 .login-card:hover {
@@ -94,147 +89,27 @@ body {
   gap: 1.8rem;
 }
 
-.form-group {
+/* … باقي تنسيقات login مثل form-group، form-input، login-btn، register-btn … */
+
+/* =========================
+   الصفحات الأخرى
+========================= */
+.page-container {
+  width: 100%;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
+  background: #f7fafc; /* لون خلفية مناسب لباقي الصفحات */
 }
 
-.form-label {
-  margin-bottom: 0.8rem;
-  color: #2d3748;
-  font-weight: 600;
-  font-size: 1rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+/* مثال على محتوى الصفحات */
+.page-container > * {
+  flex: 1;
 }
 
-.form-label::before {
-  content: '•';
-  color: #667eea;
-  font-size: 1.2rem;
-}
-
-.form-input {
-  padding: 1.2rem 1.5rem;
-  border: 2px solid #e2e8f0;
-  border-radius: 16px;
-  font-size: 1rem;
-  transition: all 0.3s ease;
-  background: rgba(255, 255, 255, 0.9);
-  font-family: inherit;
-}
-
-.form-input:focus {
-  outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15);
-  transform: translateY(-2px);
-}
-
-.form-input:hover {
-  border-color: #cbd5e0;
-}
-
-.login-btn, .register-btn {
-  padding: 1.2rem;
-  border: none;
-  border-radius: 16px;
-  font-size: 1.1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  margin-top: 1rem;
-  font-family: inherit;
-  position: relative;
-  overflow: hidden;
-}
-
-.login-btn::before, .register-btn::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: left 0.5s ease;
-}
-
-.login-btn:hover::before, .register-btn:hover::before {
-  left: 100%;
-}
-
-.login-btn {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-}
-
-.login-btn:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 15px 30px rgba(102, 126, 234, 0.4);
-}
-
-.register-btn {
-  background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
-  color: white;
-}
-
-.register-btn:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 15px 30px rgba(72, 187, 120, 0.4);
-}
-
-.login-btn:disabled, .register-btn:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.login-switch {
-  text-align: center;
-  margin-top: 2.5rem;
-  color: #718096;
-  font-size: 1rem;
-}
-
-.switch-btn {
-  background: none;
-  border: none;
-  color: #667eea;
-  cursor: pointer;
-  font-weight: 600;
-  text-decoration: none;
-  transition: all 0.3s ease;
-  padding: 0.5rem;
-  border-radius: 8px;
-}
-
-.switch-btn:hover {
-  color: #764ba2;
-  background: rgba(102, 126, 234, 0.1);
-  transform: translateY(-1px);
-}
-
-.error-message {
-  background: linear-gradient(135deg, #fed7d7 0%, #feb2b2 100%);
-  color: #c53030;
-  padding: 1.2rem;
-  border-radius: 16px;
-  margin-bottom: 2rem;
-  text-align: center;
-  border: 1px solid #feb2b2;
-  font-weight: 500;
-  animation: shake 0.5s ease-in-out;
-}
-
-@keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-5px); }
-  75% { transform: translateX(5px); }
-}
-
-/* تنسيقات الشريط العلوي */
+/* =========================
+   Navbar
+========================= */
 .navbar {
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(20px);
@@ -261,75 +136,27 @@ body {
   background-clip: text;
 }
 
-.nav-items {
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-}
+/* باقي تنسيقات navbar مثل nav-items، nav-welcome، logout-btn … */
 
-.nav-welcome {
-  color: #4a5568;
-  font-weight: 500;
-  font-size: 1.1rem;
-}
-
-.user-role {
-  background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
-  color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 20px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  text-transform: capitalize;
-}
-
-.logout-btn {
-  background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%);
-  color: white;
-  border: none;
-  padding: 0.8rem 1.5rem;
-  border-radius: 12px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  font-family: inherit;
-}
-
-.logout-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(229, 62, 62, 0.3);
-}
-
-/* تنسيقات responsive */
+/* =========================
+   Responsive
+========================= */
 @media (max-width: 768px) {
   .login-card {
     padding: 2rem;
     margin: 1rem;
     max-width: 90%;
   }
-  
-  .login-title {
-    font-size: 2rem;
-    margin-bottom: 2rem;
-  }
-  
+
   .nav-container {
     flex-direction: column;
     gap: 1rem;
     padding: 0 1rem;
   }
-  
+
   .nav-items {
     flex-direction: column;
     gap: 1rem;
-  }
-  
-  .form-input {
-    padding: 1rem;
-  }
-  
-  .login-btn, .register-btn {
-    padding: 1rem;
   }
 }
 
@@ -337,42 +164,8 @@ body {
   .login-card {
     padding: 1.5rem;
   }
-  
+
   .login-title {
     font-size: 1.8rem;
   }
-  
-  .form-input {
-    padding: 0.9rem;
-  }
-}
-
-/* تأثيرات دخول */
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(30px) scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-.login-card {
-  animation: slideIn 0.6s ease-out;
-}
-
-/* تحسينات للواجهة */
-.form-input::placeholder {
-  color: #a0aec0;
-  font-style: italic;
-}
-
-.login-btn, .register-btn {
-  letter-spacing: 0.5px;
-}
-
-.nav-logo {
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
