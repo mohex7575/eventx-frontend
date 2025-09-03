@@ -87,11 +87,11 @@ const CreateEventForm = ({ onEventCreated }) => {
   };
 
   return (
-    <div className="bg-white shadow rounded-lg p-6 mb-6">
-      <h2 className="text-2xl font-bold mb-4">Create New Event</h2>
+    <div className="bg-gray-800 shadow rounded-lg p-6 mb-6 text-gray-100">
+      <h2 className="text-2xl font-bold mb-4 text-blue-400">Create New Event</h2>
 
       {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+        <div className="bg-red-600 border border-red-400 text-white px-4 py-3 rounded mb-4">
           {error}
         </div>
       )}
@@ -105,7 +105,7 @@ const CreateEventForm = ({ onEventCreated }) => {
               name="title"
               value={formData.title}
               onChange={handleChange}
-              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-700 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
               required
               placeholder="Enter event title"
             />
@@ -118,7 +118,7 @@ const CreateEventForm = ({ onEventCreated }) => {
               name="date"
               value={formData.date}
               onChange={handleChange}
-              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-700 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
               required
               min={new Date().toISOString().split('T')[0]}
             />
@@ -131,7 +131,7 @@ const CreateEventForm = ({ onEventCreated }) => {
               name="time"
               value={formData.time}
               onChange={handleChange}
-              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-700 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
               required
             />
           </div>
@@ -143,7 +143,7 @@ const CreateEventForm = ({ onEventCreated }) => {
               name="location"
               value={formData.location}
               onChange={handleChange}
-              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-700 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
               required
               placeholder="Enter event location"
             />
@@ -156,7 +156,7 @@ const CreateEventForm = ({ onEventCreated }) => {
               name="totalSeats"
               value={formData.totalSeats}
               onChange={handleChange}
-              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-700 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
               min="1"
               required
               placeholder="Number of seats"
@@ -170,7 +170,7 @@ const CreateEventForm = ({ onEventCreated }) => {
               name="price"
               value={formData.price}
               onChange={handleChange}
-              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-700 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
               min="0"
               step="0.01"
               required
@@ -185,7 +185,7 @@ const CreateEventForm = ({ onEventCreated }) => {
             name="category"
             value={formData.category}
             onChange={handleChange}
-            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-700 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
           >
             <option value="conference">Conference</option>
             <option value="workshop">Workshop</option>
@@ -204,7 +204,7 @@ const CreateEventForm = ({ onEventCreated }) => {
             value={formData.description}
             onChange={handleChange}
             rows="4"
-            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-700 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
             required
             placeholder="Describe your event..."
           />
@@ -214,7 +214,7 @@ const CreateEventForm = ({ onEventCreated }) => {
           <button
             type="submit"
             disabled={loading}
-            className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200"
+            className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-blue-400 transition duration-200"
           >
             {loading ? 'Creating Event...' : 'Create Event'}
           </button>
@@ -234,7 +234,7 @@ const CreateEventForm = ({ onEventCreated }) => {
               });
               setError('');
             }}
-            className="bg-gray-500 text-white px-6 py-2 rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 transition duration-200"
+            className="bg-gray-600 text-white px-6 py-2 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 transition duration-200"
           >
             Clear Form
           </button>
