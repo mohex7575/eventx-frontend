@@ -12,48 +12,37 @@ const EventsPage = () => {
   const navigate = useNavigate();
 
   const fetchEvents = useCallback(async () => {
-  try {
-    setLoading(true);
-    setError('');
+    try {
+      setLoading(true);
+      setError('');
 
-    const response = await api.get('/events');
-
-    // تحقق إذا البيانات Array أو داخل response.data.events
-    let eventsData = [];
-    if (Array.isArray(response.data)) {
-      eventsData = response.data;
-    } else if (Array.isArray(response.data.events)) {
-      eventsData = response.data.events;
-    } else {
-      console.error("Unexpected response format:", response.data);
+      const response = await api.get('/events');
+      let eventsData = Array.isArray(response.data)
+        ? response.data
+        : Array.isArray(response.data.events)
+        ? response.data.events
+        : [];
+      eventsData.sort((a, b) => new Date(a.date) - new Date(b.date));
+      setEvents(eventsData);
+    } catch (error) {
+      setError('Failed to load events');
+      console.error('Error fetching events:', error);
+    } finally {
+      setLoading(false);
     }
-
-    // ترتيب الأحداث حسب التاريخ (اختياري)
-    eventsData.sort((a, b) => new Date(a.date) - new Date(b.date));
-
-    setEvents(eventsData);
-  } catch (error) {
-    setError('Failed to load events');
-    console.error('Error fetching events:', error);
-  } finally {
-    setLoading(false);
-  }
-}, []);
-
+  }, []);
 
   useEffect(() => {
     fetchEvents();
   }, [fetchEvents]);
 
-  const filteredEvents = events.filter(event => {
+  const filteredEvents = events.filter((event) => {
     const matchesSearch =
       event.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       event.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       event.location?.toLowerCase().includes(searchTerm.toLowerCase());
-
     const matchesCategory =
       categoryFilter === 'all' || event.category === categoryFilter;
-
     return matchesSearch && matchesCategory;
   });
 
@@ -87,7 +76,7 @@ const EventsPage = () => {
   }
 
   return (
-    <div className="events-page">
+    <div className="events-page dark">
       <div className="events-header">
         <h1>🎉 Discover Amazing Events</h1>
         <p>Find and book your next unforgettable experience</p>
@@ -146,7 +135,7 @@ const EventsPage = () => {
           filteredEvents.map((event) => (
             <div
               key={event._id}
-              className="event-card"
+              className="event-card dark-card"
               onClick={() => handleEventClick(event._id)}
             >
               <div className="event-image">
@@ -215,7 +204,7 @@ const EventsPage = () => {
                         event.availableSeats === 0 ||
                         new Date(event.date) < new Date()
                       }
-                      className="book-btn"
+                      className="book-btn dark-btn"
                     >
                       {event.availableSeats === 0
                         ? 'Sold Out'

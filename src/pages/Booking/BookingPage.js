@@ -18,9 +18,8 @@ const BookingPage = () => {
         console.error('Error fetching event:', error);
       }
     };
-
     fetchEvent();
-  }, [id]); // أضف id ك dependency
+  }, [id]);
 
   const handleBooking = async () => {
     if (!selectedSeat) {
@@ -30,7 +29,6 @@ const BookingPage = () => {
 
     setLoading(true);
     try {
-      // ✅ الإصلاح: إزالة response غير المستخدم
       await ticketAPI.book({
         eventId: id,
         seatNumber: selectedSeat
@@ -46,92 +44,85 @@ const BookingPage = () => {
     }
   };
 
-  if (!event) return <div className="text-center">Loading...</div>;
+  if (!event) return <div className="text-center text-gray-100 min-h-screen flex items-center justify-center">Loading...</div>;
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
-      <div className="max-w-4xl mx-auto">
-        <div className="bg-white rounded-lg shadow p-8">
-          <h1 className="text-3xl font-bold mb-6">Complete Your Booking</h1>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Event Details */}
-            <div>
-              <h2 className="text-xl font-bold mb-4">Event Information</h2>
-              <div className="space-y-2 mb-6">
-                <p><strong>Event:</strong> {event.title}</p>
-                <p><strong>Date:</strong> {new Date(event.date).toLocaleDateString()}</p>
-                <p><strong>Time:</strong> {event.time}</p>
-                <p><strong>Location:</strong> {event.location}</p>
-                <p><strong>Selected Seat:</strong> {selectedSeat || 'Not selected'}</p>
-                <p><strong>Price:</strong> ${event.price}</p>
-              </div>
+    <div className="min-h-screen bg-gray-900 p-6 text-gray-100">
+      <div className="max-w-5xl mx-auto">
+        <div className="bg-gray-800 rounded-lg shadow p-8">
+          <h1 className="text-3xl font-bold mb-6 text-center">{event.title}</h1>
+
+          {/* Event Info */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+            <div className="space-y-2">
+              <p><strong>Date:</strong> {new Date(event.date).toLocaleDateString()}</p>
+              <p><strong>Time:</strong> {event.time}</p>
+              <p><strong>Location:</strong> {event.location}</p>
+              <p><strong>Price:</strong> ${event.price}</p>
+              <p><strong>Available Seats:</strong> {event.seats.filter(s => !s.isBooked).length}</p>
             </div>
 
-            {/* Seat Selection */}
-            <div>
-              <h2 className="text-xl font-bold mb-4">Select Your Seat</h2>
-              <div className="grid grid-cols-5 gap-2 mb-6">
-                {event.seats && event.seats.map((seat) => (
-                  <button
-                    key={seat.seatNumber}
-                    onClick={() => setSelectedSeat(seat.seatNumber)}
-                    disabled={seat.isBooked}
-                    className={`p-2 rounded text-center text-sm ${
-                      seat.isBooked
-                        ? 'bg-red-300 cursor-not-allowed'
-                        : selectedSeat === seat.seatNumber
-                        ? 'bg-green-300'
-                        : 'bg-blue-100 hover:bg-blue-200'
-                    }`}
-                  >
-                    {seat.seatNumber}
-                  </button>
-                ))}
-              </div>
-
-              {/* Payment Section */}
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="text-lg font-bold mb-4">Payment Information</h3>
-                
-                <div className="space-y-3">
+            {/* Payment Section */}
+            <div className="bg-gray-700 p-4 rounded-lg">
+              <h2 className="text-xl font-bold mb-4">Payment Information</h2>
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Card Number</label>
+                  <input
+                    type="text"
+                    placeholder="1234 5678 9012 3456"
+                    className="w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-800 text-gray-100"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-sm font-medium mb-1">Card Number</label>
+                    <label className="block text-sm font-medium mb-1">Expiry Date</label>
                     <input
                       type="text"
-                      placeholder="1234 5678 9012 3456"
-                      className="w-full px-3 py-2 border rounded-md"
+                      placeholder="MM/YY"
+                      className="w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-800 text-gray-100"
                     />
                   </div>
-                  
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Expiry Date</label>
-                      <input
-                        type="text"
-                        placeholder="MM/YY"
-                        className="w-full px-3 py-2 border rounded-md"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-1">CVV</label>
-                      <input
-                        type="text"
-                        placeholder="123"
-                        className="w-full px-3 py-2 border rounded-md"
-                      />
-                    </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">CVV</label>
+                    <input
+                      type="text"
+                      placeholder="123"
+                      className="w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-800 text-gray-100"
+                    />
                   </div>
                 </div>
-
                 <button
                   onClick={handleBooking}
                   disabled={loading || !selectedSeat}
-                  className="w-full bg-green-500 text-white py-3 rounded-md mt-4 hover:bg-green-600 disabled:opacity-50"
+                  className="w-full bg-green-500 text-white py-3 rounded-md mt-4 hover:bg-green-600 disabled:opacity-50 transition"
                 >
                   {loading ? 'Processing...' : `Pay $${event.price}`}
                 </button>
               </div>
+            </div>
+          </div>
+
+          {/* Seat Selection */}
+          <div>
+            <h2 className="text-xl font-bold mb-4 text-center">Select Your Seat</h2>
+            <div className="grid grid-cols-5 gap-2 justify-center">
+              {event.seats && event.seats.map((seat) => (
+                <button
+                  key={seat.seatNumber}
+                  onClick={() => setSelectedSeat(seat.seatNumber)}
+                  disabled={seat.isBooked}
+                  className={`p-3 rounded-lg text-sm font-semibold ${
+                    seat.isBooked
+                      ? 'bg-red-700 cursor-not-allowed text-gray-400'
+                      : selectedSeat === seat.seatNumber
+                      ? 'bg-green-500 text-white shadow-lg'
+                      : 'bg-blue-700 hover:bg-blue-600 text-white'
+                  }`}
+                >
+                  {seat.seatNumber}
+                </button>
+              ))}
             </div>
           </div>
         </div>
