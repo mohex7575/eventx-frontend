@@ -80,6 +80,13 @@ const EventsPage = () => {
       <div className="events-header">
         <h1>🎉 Discover Amazing Events</h1>
         <p>Find and book your next unforgettable experience</p>
+        {/* زر My Tickets الجديد */}
+        <button
+          onClick={() => navigate('/my-tickets')}
+          className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 mt-2"
+        >
+          My Tickets
+        </button>
       </div>
 
       <div className="search-filter-section">
