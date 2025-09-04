@@ -63,10 +63,10 @@ const AdminDashboard = () => {
             <button
               onClick={() => setActiveTab('reports')}
               className={`px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 text-gray-500 cursor-not-allowed`}
-              title="Coming soon"
+              title=""
               disabled
             >
-              📈 Reports (Soon)
+              📈 Reports ()
             </button>
           </nav>
         </div>
