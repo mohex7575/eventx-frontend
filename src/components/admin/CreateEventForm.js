@@ -22,7 +22,7 @@ const CreateEventForm = ({ onEventCreated }) => {
       ...formData,
       [e.target.name]: e.target.value
     });
-    if (error) setError(''); // Clear error while typing
+    if (error) setError('');
   };
 
   const validateForm = () => {
@@ -34,23 +34,15 @@ const CreateEventForm = ({ onEventCreated }) => {
     if (!formData.totalSeats || formData.totalSeats < 1) return 'Total seats must be at least 1';
     if (formData.price === '' || formData.price < 0) return 'Price must be a non-negative number';
 
-    // Combine date + time and check if in the future
-    const eventDateTime = new Date(`${formData.date}T${formData.time}`);
-    if (isNaN(eventDateTime.getTime())) return 'Invalid date or time';
-    if (eventDateTime <= new Date()) return 'Event date and time must be in the future';
-
-    // Validate category
-    const allowedCategories = ['conference', 'workshop', 'concert', 'webinar', 'sports', 'networking', 'other'];
-    if (!allowedCategories.includes(formData.category.toLowerCase())) {
-      return 'Invalid category selected';
-    }
+    const dateTime = new Date(`${formData.date}T${formData.time}`);
+    if (isNaN(dateTime.getTime())) return 'Invalid date or time format';
+    if (dateTime <= new Date()) return 'Event date and time must be in the future';
 
     return null;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     const validationError = validateForm();
     if (validationError) {
       setError(validationError);
@@ -64,14 +56,16 @@ const CreateEventForm = ({ onEventCreated }) => {
       const eventData = {
         title: formData.title.trim(),
         description: formData.description.trim(),
-        date: formData.date,        // Date only
-        time: formData.time,        // Time as string
+        date: formData.date, // backend expects "yyyy-mm-dd"
+        time: formData.time, // backend expects "HH:MM"
         location: formData.location.trim(),
         totalSeats: parseInt(formData.totalSeats, 10),
         price: parseFloat(formData.price),
         category: formData.category.toLowerCase(),
         image: formData.image.trim() || ''
       };
+
+      console.log('Submitting event data:', eventData);
 
       const response = await eventAPI.createEvent(eventData);
 
@@ -118,8 +112,9 @@ const CreateEventForm = ({ onEventCreated }) => {
               name="title"
               value={formData.title}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-700 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
               placeholder="Enter event title"
+              className="w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-700 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              required
             />
           </div>
 
@@ -131,6 +126,7 @@ const CreateEventForm = ({ onEventCreated }) => {
               value={formData.date}
               onChange={handleChange}
               className="w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-700 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              required
               min={new Date().toISOString().split('T')[0]}
             />
           </div>
@@ -143,6 +139,7 @@ const CreateEventForm = ({ onEventCreated }) => {
               value={formData.time}
               onChange={handleChange}
               className="w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-700 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              required
             />
           </div>
 
@@ -153,8 +150,9 @@ const CreateEventForm = ({ onEventCreated }) => {
               name="location"
               value={formData.location}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-700 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
               placeholder="Enter event location"
+              className="w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-700 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              required
             />
           </div>
 
@@ -165,9 +163,10 @@ const CreateEventForm = ({ onEventCreated }) => {
               name="totalSeats"
               value={formData.totalSeats}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-700 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
               min="1"
               placeholder="Number of seats"
+              className="w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-700 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              required
             />
           </div>
 
@@ -178,42 +177,31 @@ const CreateEventForm = ({ onEventCreated }) => {
               name="price"
               value={formData.price}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-700 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
               min="0"
               step="0.01"
               placeholder="0.00"
+              className="w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-700 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              required
             />
           </div>
+        </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-1">Category *</label>
-            <select
-              name="category"
-              value={formData.category}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-700 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            >
-              <option value="conference">Conference</option>
-              <option value="workshop">Workshop</option>
-              <option value="concert">Concert</option>
-              <option value="webinar">Webinar</option>
-              <option value="sports">Sports</option>
-              <option value="networking">Networking</option>
-              <option value="other">Other</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">Image URL</label>
-            <input
-              type="text"
-              name="image"
-              value={formData.image}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-700 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
-              placeholder="Optional image URL"
-            />
-          </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Category *</label>
+          <select
+            name="category"
+            value={formData.category}
+            onChange={handleChange}
+            className="w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-700 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          >
+            <option value="conference">Conference</option>
+            <option value="workshop">Workshop</option>
+            <option value="concert">Concert</option>
+            <option value="webinar">Webinar</option>
+            <option value="sports">Sports</option>
+            <option value="networking">Networking</option>
+            <option value="other">Other</option>
+          </select>
         </div>
 
         <div>
@@ -223,8 +211,21 @@ const CreateEventForm = ({ onEventCreated }) => {
             value={formData.description}
             onChange={handleChange}
             rows="4"
-            className="w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-700 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
             placeholder="Describe your event..."
+            className="w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-700 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">Image URL</label>
+          <input
+            type="text"
+            name="image"
+            value={formData.image}
+            onChange={handleChange}
+            placeholder="Optional image URL"
+            className="w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-700 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
         </div>
 
