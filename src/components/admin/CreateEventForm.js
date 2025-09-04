@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { eventAPI } from '../../services/api';
-import { handleApiError } from '../../services/api';
+import { eventAPI, handleApiError } from '../../services/api';
 
 const CreateEventForm = ({ onEventCreated }) => {
   const [formData, setFormData] = useState({
@@ -17,22 +16,24 @@ const CreateEventForm = ({ onEventCreated }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // Handle input changes
   const handleChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
     });
-    if (error) setError(''); // Clear error when typing
+    if (error) setError('');
   };
 
+  // Client-side validation
   const validateForm = () => {
     if (!formData.title.trim()) return 'Event title is required';
     if (!formData.description.trim()) return 'Event description is required';
     if (!formData.date) return 'Event date is required';
     if (!formData.time) return 'Event time is required';
     if (!formData.location.trim()) return 'Event location is required';
-    if (!formData.totalSeats || formData.totalSeats < 1) return 'Total seats must be at least 1';
-    if (formData.price === '' || formData.price < 0) return 'Price must be a non-negative number';
+    if (!formData.totalSeats || parseInt(formData.totalSeats, 10) < 1) return 'Total seats must be at least 1';
+    if (formData.price === '' || parseFloat(formData.price) < 0) return 'Price must be a non-negative number';
 
     const eventDateTime = new Date(`${formData.date}T${formData.time}`);
     if (eventDateTime <= new Date()) return 'Event date and time must be in the future';
@@ -40,6 +41,7 @@ const CreateEventForm = ({ onEventCreated }) => {
     return null;
   };
 
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -53,9 +55,17 @@ const CreateEventForm = ({ onEventCreated }) => {
     setError('');
 
     try {
+      // Convert date+time to ISO
+      const isoDate = new Date(`${formData.date}T${formData.time}`).toISOString();
+
       const eventData = {
-        ...formData,
+        title: formData.title.trim(),
+        description: formData.description.trim(),
+        date: isoDate,
+        time: formData.time,
+        location: formData.location.trim(),
         totalSeats: parseInt(formData.totalSeats, 10),
+        availableSeats: parseInt(formData.totalSeats, 10),
         price: parseFloat(formData.price),
         category: formData.category.toLowerCase()
       };
@@ -98,6 +108,7 @@ const CreateEventForm = ({ onEventCreated }) => {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Title */}
           <div>
             <label className="block text-sm font-medium mb-1">Event Title *</label>
             <input
@@ -111,6 +122,7 @@ const CreateEventForm = ({ onEventCreated }) => {
             />
           </div>
 
+          {/* Date */}
           <div>
             <label className="block text-sm font-medium mb-1">Date *</label>
             <input
@@ -124,6 +136,7 @@ const CreateEventForm = ({ onEventCreated }) => {
             />
           </div>
 
+          {/* Time */}
           <div>
             <label className="block text-sm font-medium mb-1">Time *</label>
             <input
@@ -136,6 +149,7 @@ const CreateEventForm = ({ onEventCreated }) => {
             />
           </div>
 
+          {/* Location */}
           <div>
             <label className="block text-sm font-medium mb-1">Location *</label>
             <input
@@ -149,6 +163,7 @@ const CreateEventForm = ({ onEventCreated }) => {
             />
           </div>
 
+          {/* Total Seats */}
           <div>
             <label className="block text-sm font-medium mb-1">Total Seats *</label>
             <input
@@ -163,6 +178,7 @@ const CreateEventForm = ({ onEventCreated }) => {
             />
           </div>
 
+          {/* Price */}
           <div>
             <label className="block text-sm font-medium mb-1">Price ($) *</label>
             <input
@@ -179,6 +195,7 @@ const CreateEventForm = ({ onEventCreated }) => {
           </div>
         </div>
 
+        {/* Category */}
         <div>
           <label className="block text-sm font-medium mb-1">Category *</label>
           <select
@@ -197,6 +214,7 @@ const CreateEventForm = ({ onEventCreated }) => {
           </select>
         </div>
 
+        {/* Description */}
         <div>
           <label className="block text-sm font-medium mb-1">Description *</label>
           <textarea
@@ -210,6 +228,7 @@ const CreateEventForm = ({ onEventCreated }) => {
           />
         </div>
 
+        {/* Buttons */}
         <div className="flex gap-4">
           <button
             type="submit"
