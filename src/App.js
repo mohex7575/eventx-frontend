@@ -6,7 +6,6 @@ import EventDetailPage from './pages/Events/EventDetailPage';
 import BookingPage from './pages/Booking/BookingPage';
 import MyTickets from './pages/Tickets/MyTickets';
 import Login from './components/Login';
-import { authAPI } from './services/api';
 import './App.css';
 
 function App() {
@@ -18,36 +17,31 @@ function App() {
     checkAuth();
   }, []);
 
-  const checkAuth = async () => {
-    const token = localStorage.getItem('token');
+  const checkAuth = () => {
+    // أولاً تحقق من localStorage
+    let token = localStorage.getItem('token');
+    let role = localStorage.getItem('userRole');
+    let name = localStorage.getItem('userName');
+
+    // إذا لم يوجد في localStorage، تحقق من sessionStorage
     if (!token) {
-      setIsAuthenticated(false);
-      setUserRole('');
-      setUserName('');
-      return;
+      token = sessionStorage.getItem('token');
+      role = sessionStorage.getItem('userRole');
+      name = sessionStorage.getItem('userName');
     }
 
-    try {
-      // التحقق من صحة التوكن مع السيرفر
-      const res = await authAPI.getProfile();
-      setIsAuthenticated(true);
-      setUserRole(res.data.role);
-      setUserName(res.data.name);
-    } catch (err) {
-      // التوكن غير صالح أو انتهت صلاحيته
-      localStorage.removeItem('token');
-      localStorage.removeItem('userRole');
-      localStorage.removeItem('userName');
-      setIsAuthenticated(false);
-      setUserRole('');
-      setUserName('');
-    }
+    setIsAuthenticated(!!token);
+    setUserRole(role || '');
+    setUserName(name || '');
   };
 
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('userRole');
     localStorage.removeItem('userName');
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('userRole');
+    sessionStorage.removeItem('userName');
     checkAuth();
     window.location.href = '/login';
   };
@@ -58,9 +52,11 @@ function App() {
         <nav className="navbar">
           <div className="nav-container">
             <h1 className="nav-logo">EventX</h1>
+            
             <div className="nav-items">
               <span className="nav-welcome">Welcome, {userName}</span>
               <span className="user-role">{userRole}</span>
+              
               <button 
                 onClick={handleLogout}
                 className="logout-btn"
