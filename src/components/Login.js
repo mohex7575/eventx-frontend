@@ -4,6 +4,7 @@ import api from "../services/api";
 
 const LoginPage = ({ onLogin }) => {
   const [isLogin, setIsLogin] = useState(true);
+  const [rememberMe, setRememberMe] = useState(true); // ✅ always remember by default
   const [loginData, setLoginData] = useState({ email: "", password: "" });
   const [registerData, setRegisterData] = useState({
     name: "",
@@ -29,9 +30,16 @@ const LoginPage = ({ onLogin }) => {
       const response = await api.post("/auth/login", loginData);
       const { token, role, name } = response.data;
 
-      localStorage.setItem("token", token);
-      localStorage.setItem("userRole", role);
-      localStorage.setItem("userName", name);
+      // ✅ store in localStorage if rememberMe is true (always true in our case)
+      if (rememberMe) {
+        localStorage.setItem("token", token);
+        localStorage.setItem("userRole", role);
+        localStorage.setItem("userName", name);
+      } else {
+        sessionStorage.setItem("token", token);
+        sessionStorage.setItem("userRole", role);
+        sessionStorage.setItem("userName", name);
+      }
 
       if (onLogin) onLogin();
       navigate(role === "admin" ? "/admin" : "/events");
@@ -57,6 +65,7 @@ const LoginPage = ({ onLogin }) => {
         password: registerData.password,
       });
 
+      // ✅ store in localStorage always
       localStorage.setItem("token", response.data.token);
       localStorage.setItem("userRole", response.data.role);
       localStorage.setItem("userName", response.data.name);
@@ -72,20 +81,16 @@ const LoginPage = ({ onLogin }) => {
 
   return (
     <div className="relative flex items-center justify-center min-h-screen">
-      {/* خلفية صورة */}
       <div className="absolute inset-0">
         <img
           src="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1920&q=80"
           alt="Event Background"
           className="w-full h-full object-cover"
         />
-        {/* طبقة داكنة فوق الصورة */}
         <div className="absolute inset-0 bg-black bg-opacity-70"></div>
       </div>
 
-      {/* صندوق تسجيل الدخول */}
       <div className="relative z-10 bg-gray-900/90 backdrop-blur-lg shadow-2xl rounded-2xl p-8 w-full max-w-md border border-gray-700">
-        {/* شعار */}
         <h1 className="text-4xl font-extrabold text-center text-purple-500 mb-6">
           Event<span className="text-blue-400">X</span>
         </h1>
@@ -146,6 +151,21 @@ const LoginPage = ({ onLogin }) => {
               className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
               required
             />
+          )}
+
+          {isLogin && (
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                id="rememberMe"
+                className="accent-purple-500"
+              />
+              <label htmlFor="rememberMe" className="text-gray-300 text-sm">
+                Remember Me
+              </label>
+            </div>
           )}
 
           <button

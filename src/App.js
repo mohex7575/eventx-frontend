@@ -6,6 +6,7 @@ import EventDetailPage from './pages/Events/EventDetailPage';
 import BookingPage from './pages/Booking/BookingPage';
 import MyTickets from './pages/Tickets/MyTickets';
 import Login from './components/Login';
+import { authAPI } from './services/api';
 import './App.css';
 
 function App() {
@@ -17,14 +18,30 @@ function App() {
     checkAuth();
   }, []);
 
-  const checkAuth = () => {
+  const checkAuth = async () => {
     const token = localStorage.getItem('token');
-    const role = localStorage.getItem('userRole');
-    const name = localStorage.getItem('userName');
-    
-    setIsAuthenticated(!!token);
-    setUserRole(role || '');
-    setUserName(name || '');
+    if (!token) {
+      setIsAuthenticated(false);
+      setUserRole('');
+      setUserName('');
+      return;
+    }
+
+    try {
+      // التحقق من صحة التوكن مع السيرفر
+      const res = await authAPI.getProfile();
+      setIsAuthenticated(true);
+      setUserRole(res.data.role);
+      setUserName(res.data.name);
+    } catch (err) {
+      // التوكن غير صالح أو انتهت صلاحيته
+      localStorage.removeItem('token');
+      localStorage.removeItem('userRole');
+      localStorage.removeItem('userName');
+      setIsAuthenticated(false);
+      setUserRole('');
+      setUserName('');
+    }
   };
 
   const handleLogout = () => {
@@ -41,11 +58,9 @@ function App() {
         <nav className="navbar">
           <div className="nav-container">
             <h1 className="nav-logo">EventX</h1>
-            
             <div className="nav-items">
               <span className="nav-welcome">Welcome, {userName}</span>
               <span className="user-role">{userRole}</span>
-              
               <button 
                 onClick={handleLogout}
                 className="logout-btn"
