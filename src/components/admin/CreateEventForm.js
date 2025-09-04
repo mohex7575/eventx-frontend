@@ -10,38 +10,44 @@ const CreateEventForm = ({ onEventCreated }) => {
     location: '',
     totalSeats: '',
     price: '',
-    category: 'conference'
+    category: 'conference',
+    image: ''
   });
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Handle input changes
   const handleChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
     });
-    if (error) setError('');
+    if (error) setError(''); // Clear error while typing
   };
 
-  // Client-side validation
   const validateForm = () => {
     if (!formData.title.trim()) return 'Event title is required';
     if (!formData.description.trim()) return 'Event description is required';
     if (!formData.date) return 'Event date is required';
     if (!formData.time) return 'Event time is required';
     if (!formData.location.trim()) return 'Event location is required';
-    if (!formData.totalSeats || parseInt(formData.totalSeats, 10) < 1) return 'Total seats must be at least 1';
-    if (formData.price === '' || parseFloat(formData.price) < 0) return 'Price must be a non-negative number';
+    if (!formData.totalSeats || formData.totalSeats < 1) return 'Total seats must be at least 1';
+    if (formData.price === '' || formData.price < 0) return 'Price must be a non-negative number';
 
+    // Combine date + time and check if in the future
     const eventDateTime = new Date(`${formData.date}T${formData.time}`);
+    if (isNaN(eventDateTime.getTime())) return 'Invalid date or time';
     if (eventDateTime <= new Date()) return 'Event date and time must be in the future';
+
+    // Validate category
+    const allowedCategories = ['conference', 'workshop', 'concert', 'webinar', 'sports', 'networking', 'other'];
+    if (!allowedCategories.includes(formData.category.toLowerCase())) {
+      return 'Invalid category selected';
+    }
 
     return null;
   };
 
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -55,19 +61,16 @@ const CreateEventForm = ({ onEventCreated }) => {
     setError('');
 
     try {
-      // Convert date+time to ISO
-      const isoDate = new Date(`${formData.date}T${formData.time}`).toISOString();
-
       const eventData = {
         title: formData.title.trim(),
         description: formData.description.trim(),
-        date: isoDate,
-        time: formData.time,
+        date: formData.date,        // Date only
+        time: formData.time,        // Time as string
         location: formData.location.trim(),
         totalSeats: parseInt(formData.totalSeats, 10),
-        availableSeats: parseInt(formData.totalSeats, 10),
         price: parseFloat(formData.price),
-        category: formData.category.toLowerCase()
+        category: formData.category.toLowerCase(),
+        image: formData.image.trim() || ''
       };
 
       const response = await eventAPI.createEvent(eventData);
@@ -82,11 +85,11 @@ const CreateEventForm = ({ onEventCreated }) => {
         location: '',
         totalSeats: '',
         price: '',
-        category: 'conference'
+        category: 'conference',
+        image: ''
       });
 
       if (onEventCreated) onEventCreated(response.data);
-
     } catch (err) {
       console.error('Error creating event:', err);
       const errorInfo = handleApiError(err);
@@ -108,7 +111,6 @@ const CreateEventForm = ({ onEventCreated }) => {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Title */}
           <div>
             <label className="block text-sm font-medium mb-1">Event Title *</label>
             <input
@@ -117,12 +119,10 @@ const CreateEventForm = ({ onEventCreated }) => {
               value={formData.title}
               onChange={handleChange}
               className="w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-700 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
-              required
               placeholder="Enter event title"
             />
           </div>
 
-          {/* Date */}
           <div>
             <label className="block text-sm font-medium mb-1">Date *</label>
             <input
@@ -131,12 +131,10 @@ const CreateEventForm = ({ onEventCreated }) => {
               value={formData.date}
               onChange={handleChange}
               className="w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-700 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
-              required
               min={new Date().toISOString().split('T')[0]}
             />
           </div>
 
-          {/* Time */}
           <div>
             <label className="block text-sm font-medium mb-1">Time *</label>
             <input
@@ -145,11 +143,9 @@ const CreateEventForm = ({ onEventCreated }) => {
               value={formData.time}
               onChange={handleChange}
               className="w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-700 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
-              required
             />
           </div>
 
-          {/* Location */}
           <div>
             <label className="block text-sm font-medium mb-1">Location *</label>
             <input
@@ -158,12 +154,10 @@ const CreateEventForm = ({ onEventCreated }) => {
               value={formData.location}
               onChange={handleChange}
               className="w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-700 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
-              required
               placeholder="Enter event location"
             />
           </div>
 
-          {/* Total Seats */}
           <div>
             <label className="block text-sm font-medium mb-1">Total Seats *</label>
             <input
@@ -173,12 +167,10 @@ const CreateEventForm = ({ onEventCreated }) => {
               onChange={handleChange}
               className="w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-700 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
               min="1"
-              required
               placeholder="Number of seats"
             />
           </div>
 
-          {/* Price */}
           <div>
             <label className="block text-sm font-medium mb-1">Price ($) *</label>
             <input
@@ -189,32 +181,41 @@ const CreateEventForm = ({ onEventCreated }) => {
               className="w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-700 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
               min="0"
               step="0.01"
-              required
               placeholder="0.00"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">Category *</label>
+            <select
+              name="category"
+              value={formData.category}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-700 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            >
+              <option value="conference">Conference</option>
+              <option value="workshop">Workshop</option>
+              <option value="concert">Concert</option>
+              <option value="webinar">Webinar</option>
+              <option value="sports">Sports</option>
+              <option value="networking">Networking</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">Image URL</label>
+            <input
+              type="text"
+              name="image"
+              value={formData.image}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-700 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              placeholder="Optional image URL"
             />
           </div>
         </div>
 
-        {/* Category */}
-        <div>
-          <label className="block text-sm font-medium mb-1">Category *</label>
-          <select
-            name="category"
-            value={formData.category}
-            onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-700 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
-          >
-            <option value="conference">Conference</option>
-            <option value="workshop">Workshop</option>
-            <option value="concert">Concert</option>
-            <option value="webinar">Webinar</option>
-            <option value="sports">Sports</option>
-            <option value="networking">Networking</option>
-            <option value="other">Other</option>
-          </select>
-        </div>
-
-        {/* Description */}
         <div>
           <label className="block text-sm font-medium mb-1">Description *</label>
           <textarea
@@ -223,12 +224,10 @@ const CreateEventForm = ({ onEventCreated }) => {
             onChange={handleChange}
             rows="4"
             className="w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-700 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            required
             placeholder="Describe your event..."
           />
         </div>
 
-        {/* Buttons */}
         <div className="flex gap-4">
           <button
             type="submit"
@@ -249,7 +248,8 @@ const CreateEventForm = ({ onEventCreated }) => {
                 location: '',
                 totalSeats: '',
                 price: '',
-                category: 'conference'
+                category: 'conference',
+                image: ''
               });
               setError('');
             }}
