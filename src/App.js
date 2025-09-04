@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import AdminDashboard from './pages/Admin/AdminDashboard';
 import EventsPage from './pages/Events/EventsPage';
 import EventDetailPage from './pages/Events/EventDetailPage';
@@ -12,6 +12,7 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userRole, setUserRole] = useState('');
   const [userName, setUserName] = useState('');
+  const location = useLocation();
 
   useEffect(() => {
     checkAuth();
@@ -77,7 +78,8 @@ function App() {
 
   return (
     <div className="App">
-      {isAuthenticated && <Navbar />}
+      {/* Show Navbar only if authenticated and not on login page */}
+      {isAuthenticated && location.pathname !== '/login' && <Navbar />}
 
       <Routes>
         <Route path="/login" element={<Login onLogin={checkAuth} />} />
